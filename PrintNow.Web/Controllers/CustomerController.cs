@@ -517,6 +517,32 @@ namespace PrintNow.Web.Controllers
             return RedirectToAction("Orders");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == userId);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            if (order.Status != "Pending")
+            {
+                TempData["ErrorMessage"] = "Không thể hủy đơn hàng đã được xác nhận hoặc đang xử lý.";
+                return RedirectToAction(nameof(Orders));
+            }
+
+            order.Status = "Cancelled";
+            order.CancelReason = "Khách hàng tự hủy đơn";
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Đã hủy đơn hàng #{id} thành công!";
+            return RedirectToAction(nameof(Orders));
+        }
+
         private double CalculateHaversineDistance(double lat1, double lon1, double lat2, double lon2)
         {
             var R = 6371; // Bán kính trái đất tính bằng km

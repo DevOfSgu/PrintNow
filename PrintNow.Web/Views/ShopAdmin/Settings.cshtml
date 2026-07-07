@@ -186,7 +186,7 @@
 
         <div class="row g-4">
             <!-- CỘT TRÁI: THÔNG TIN CƠ BẢN -->
-            <div class="col-lg-7">
+            <div class="col-12 col-lg-7">
                 <div class="settings-card">
                     <div class="settings-card-header">
                         <i class="bi bi-shop text-danger fs-5"></i>
@@ -207,6 +207,7 @@
                         <div class="mb-3">
                             <label asp-for="ShopName" class="form-group-label">Tên tiệm in</label>
                             <input asp-for="ShopName" class="form-input-custom" placeholder="Ví dụ: PrintNow Flagship Store" required />
+                            <span asp-validation-for="ShopName" class="text-danger small mt-1 d-block"></span>
                         </div>
 
                         <!-- Hàng: Số điện thoại + Email -->
@@ -258,7 +259,7 @@
             </div>
 
             <!-- CỘT PHẢI: VỊ TRÍ & BẢN ĐỒ -->
-            <div class="col-lg-5">
+            <div class="col-12 col-lg-5 mt-4 mt-lg-0">
                 <div class="settings-card h-100 d-flex flex-column">
                     <div class="settings-card-header">
                         <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
@@ -269,7 +270,8 @@
                         <!-- Địa chỉ cụ thể -->
                         <div class="mb-3">
                             <label asp-for="AddressText" class="form-group-label">Địa chỉ cụ thể</label>
-                            <input asp-for="AddressText" class="form-input-custom" placeholder="123 Đường Lê Lợi, Phường Bến Nghé, Quận 1..." />
+                            <input asp-for="AddressText" class="form-input-custom" placeholder="123 Đường Lê Lợi, Phường Bến Nghé, Quận 1..." required />
+                            <span asp-validation-for="AddressText" class="text-danger small mt-1 d-block"></span>
                         </div>
 
                         <!-- Bản đồ vị trí -->
@@ -391,4 +393,5 @@
             }
         });
     </script>
+    <partial name="_ValidationScriptsPartial" />
 }

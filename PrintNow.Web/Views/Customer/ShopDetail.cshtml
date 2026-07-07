@@ -17,15 +17,15 @@
 
     <div class="row g-4">
         <!-- Cột trái: Thông tin chính & Bảng giá -->
-        <div class="col-lg-8">
+        <div class="col-12 col-lg-8">
             <!-- Thông tin chính -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; border: 1px solid #E5E5E5;">
-                <div class="card-body p-4 d-flex align-items-center gap-4">
+                <div class="card-body p-4 d-flex flex-column flex-md-row align-items-center align-items-md-center gap-4 text-center text-md-start">
                     <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                         <img src="@shopImageUrl" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" />
                     </div>
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="flex-grow-1 w-100">
+                        <div class="d-flex flex-column flex-sm-row align-items-center gap-2 mb-2 justify-content-center justify-content-md-start">
                             <h4 class="fw-bold mb-0" style="color: var(--on-surface);">@Model.ShopName</h4>
                             @if (Model.IsActive)
                             {
@@ -47,10 +47,12 @@
                         </p>
                         @if (!string.IsNullOrEmpty(Model.Description))
                         {
-                            <p class="text-secondary small mb-3" style="max-width: 600px;">@Model.Description</p>
+                            <p class="text-secondary small mb-3 mx-auto mx-md-0" style="max-width: 600px;">@Model.Description</p>
                         }
-                        <a href="/Customer/OrderConfig/@Model.Id" class="btn btn-primary px-4 fw-bold" style="border-radius: 8px;"><i class="bi bi-printer me-2"></i> Đặt in ngay</a>
-                        <a href="/Customer/Messages?shopId=@Model.Id" class="btn btn-outline-primary px-4 fw-bold ms-2" style="border-radius: 8px;"><i class="bi bi-chat-left-dots me-2"></i> Nhắn tin</a>
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center justify-content-md-start">
+                            <a href="/Customer/OrderConfig/@Model.Id" class="btn btn-primary px-4 fw-bold" style="border-radius: 8px;"><i class="bi bi-printer me-2"></i> Đặt in ngay</a>
+                            <a href="/Customer/Messages?shopId=@Model.Id" class="btn btn-outline-primary px-4 fw-bold" style="border-radius: 8px;"><i class="bi bi-chat-left-dots me-2"></i> Nhắn tin</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -88,9 +90,9 @@
             <!-- Đánh giá khách hàng -->
             <div class="card border-0 shadow-sm" style="border-radius: 16px; border: 1px solid #E5E5E5;">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
                         <h5 class="fw-bold mb-0" style="color: var(--on-surface);">Đánh giá khách hàng</h5>
-                        <div class="text-end">
+                        <div class="text-sm-end">
                             <span class="fs-4 fw-bold text-warning me-1"><i class="bi bi-star-fill"></i> @avgRating.ToString("0.0")</span>
                             <span class="text-muted">(@totalReviews đánh giá)</span>
                         </div>
@@ -101,7 +103,7 @@
                         {
                             foreach (var r in reviews)
                             {
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <div class="p-3 border rounded" style="background-color: #fafafa;">
                                         <div class="d-flex justify-content-between mb-2">
                                             <div class="d-flex align-items-center gap-2">
@@ -139,7 +141,7 @@
         </div>
 
         <!-- Cột phải: Liên hệ -->
-        <div class="col-lg-4">
+        <div class="col-12 col-lg-4 mt-4 mt-lg-0">
             <div class="card border-0 shadow-sm" style="border-radius: 16px; border: 1px solid #E5E5E5;">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-4 d-flex align-items-center gap-2" style="color: var(--on-surface);">

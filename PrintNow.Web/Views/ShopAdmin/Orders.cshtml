@@ -431,62 +431,85 @@
         </div>
     </div>
 
-    <!-- CỘT 4: HOÀN THÀNH -->
-    <div class="kanban-column">
-        <div class="kanban-column-header">
-            <h6 class="column-title">Hoàn thành</h6>
-            <span class="column-count">@completedOrders.Count</span>
+</div>
+
+<!-- LỊCH SỬ ĐƠN HOÀN THÀNH -->
+<div class="card border-0 shadow-sm mt-4" style="border-radius: 16px; overflow: hidden;">
+    <div class="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center" id="historyToggle" style="cursor: pointer;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width: 40px; height: 40px; background-color: #f0fdf4; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-check2-circle text-success fs-5"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold m-0" style="font-size: 16px; color: #0f172a;">Lịch sử đơn hoàn thành</h5>
+                <p class="text-muted m-0" style="font-size: 12px;">@completedOrders.Count đơn đã giao thành công</p>
+            </div>
         </div>
-        <div class="kanban-cards-container">
-            @foreach (var order in completedOrders)
-            {
-                <div class="order-card opacity-75">
-                    <div class="order-header">
-                        <span class="order-id text-muted">#ORD-@order.Id</span>
-                        <span class="order-time"><i class="bi bi-check2 text-success me-1"></i>Hoàn thành</span>
-                    </div>
-                    <div class="customer-name text-muted">@order.Customer.FullName</div>
-                    @if (order.DeliveryMethod == "Delivery")
-                    {
-                        <div class="mb-2 text-danger" style="font-size: 12px; font-weight: 500; opacity: 0.8;">
-                            <i class="bi bi-truck me-1"></i> Giao hàng: @order.ShippingAddress
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="mb-2 text-muted" style="font-size: 12px; opacity: 0.8;">
-                            <i class="bi bi-shop me-1"></i> Nhận tại cửa hàng
-                        </div>
-                    }
-                    
-                    <div class="mb-2">
-                        @foreach (var detail in order.OrderDetails)
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-success fw-bold px-3 py-2" style="font-size: 13px; border-radius: 8px;">@completedOrders.Sum(o => o.TotalAmount).ToString("N0")đ</span>
+            <i class="bi bi-chevron-down fs-5 text-muted transition" id="historyChevron" style="transition: transform 0.3s;"></i>
+        </div>
+    </div>
+    <div id="historyContent" style="display: none;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-muted small">
+                        <tr>
+                            <th class="border-0 ps-4" style="font-weight: 600;">Mã ĐH</th>
+                            <th class="border-0" style="font-weight: 600;">Khách hàng</th>
+                            <th class="border-0 d-none d-sm-table-cell" style="font-weight: 600;">File</th>
+                            <th class="border-0 d-none d-md-table-cell" style="font-weight: 600;">Hình thức</th>
+                            <th class="border-0" style="font-weight: 600;">Tổng tiền</th>
+                            <th class="border-0 pe-4 d-none d-sm-table-cell" style="font-weight: 600;">Ngày đặt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (completedOrders.Any())
                         {
-                            <div class="file-item" style="opacity: 0.8;">
-                                <div class="file-name-text text-truncate text-muted">@detail.FileName</div>
-                            </div>
+                            foreach (var order in completedOrders)
+                            {
+                                <tr>
+                                    <td class="ps-4"><span class="fw-bold" style="font-size: 13px;">#ORD-@order.Id</span></td>
+                                    <td>
+                                        <span class="fw-medium" style="font-size: 13px;">@order.Customer.FullName</span>
+                                        <div class="text-muted" style="font-size: 11px;">@order.Customer.Email</div>
+                                    </td>
+                                    <td class="d-none d-sm-table-cell">
+                                        @foreach (var detail in order.OrderDetails)
+                                        {
+                                            <div class="text-truncate" style="max-width: 160px; font-size: 12px;">@detail.FileName</div>
+                                        }
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        @if (order.DeliveryMethod == "Delivery")
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 11px;">Giao hàng</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 11px;">Tại shop</span>
+                                        }
+                                    </td>
+                                    <td class="fw-bold" style="font-size: 14px; color: var(--primary);">@order.TotalAmount.ToString("N0")đ</td>
+                                    <td class="text-muted pe-4 d-none d-sm-table-cell" style="font-size: 12px;">@order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
                         }
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                        <span class="order-price text-muted">@order.TotalAmount.ToString("N0")đ</span>
-                        @if (order.ShippingFee > 0)
+                        else
                         {
-                            <span class="text-muted" style="font-size: 11px;">(gồm @order.ShippingFee.ToString("N0")đ ship)</span>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-5" style="font-size: 13px;">Chưa có đơn hàng nào hoàn thành.</td>
+                            </tr>
                         }
-                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 11px;">Đã giao thành công</span>
-                    </div>
-                </div>
-            }
-            @if (!completedOrders.Any())
-            {
-                <div class="text-center text-muted py-5" style="font-size: 13px;">Chưa có đơn hoàn thành</div>
-            }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="text-end mt-2">
+<div class="text-end mt-3">
     <a href="#" class="text-decoration-none text-muted small fw-bold" data-bs-toggle="modal" data-bs-target="#cancelledOrdersModal">
         <i class="bi bi-trash3 me-1"></i> Xem các đơn đã hủy
     </a>
@@ -553,4 +576,17 @@
         form.querySelector('input[name="cancelReason"]').value = reason;
         form.submit();
     }
+
+    // Toggle lịch sử đơn hoàn thành
+    document.getElementById('historyToggle').addEventListener('click', function() {
+        var content = document.getElementById('historyContent');
+        var chevron = document.getElementById('historyChevron');
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            chevron.style.transform = 'rotate(180deg)';
+        } else {
+            content.style.display = 'none';
+            chevron.style.transform = 'rotate(0deg)';
+        }
+    });
 </script>

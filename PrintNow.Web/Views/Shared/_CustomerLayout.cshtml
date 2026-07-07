@@ -30,10 +30,12 @@
             z-index: 10;
         }
         .customer-sidebar-header {
-            padding: 0 24px;
+            padding: 12px 24px 0;
             margin-bottom: 32px;
             display: flex;
+            align-items: center;
             justify-content: center;
+            position: relative;
         }
         .customer-nav {
             display: flex;
@@ -237,8 +239,18 @@
 </head>
 <body>
     <div class="customer-layout">
+        <!-- Hamburger button for mobile -->
+        <button class="mobile-hamburger" id="mobileSidebarToggle" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
         <!-- Sidebar -->
-        <aside class="customer-sidebar">
+        <aside class="customer-sidebar" id="customerSidebar">
             <div class="customer-sidebar-header">
                 <a href="/Customer/Index">
                     <img src="~/logoapp.png" alt="PrintNow" style="height: 36px; object-fit: contain;" />
@@ -456,6 +468,44 @@
                 if (el) el.remove();
             }
         });
+
+        // Mobile sidebar toggle
+        const sidebarToggle = document.getElementById('mobileSidebarToggle');
+        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const customerSidebar = document.getElementById('customerSidebar');
+
+        if (sidebarToggle && sidebarOverlay && customerSidebar) {
+            function openSidebar() {
+                customerSidebar.classList.add('open');
+                sidebarOverlay.classList.add('show');
+                sidebarToggle.style.display = 'none';
+                if (sidebarCloseBtn) sidebarCloseBtn.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+            function closeSidebar() {
+                customerSidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('show');
+                sidebarToggle.style.display = '';
+                if (sidebarCloseBtn) sidebarCloseBtn.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+            sidebarToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (customerSidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+            if (sidebarCloseBtn) {
+                sidebarCloseBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeSidebar();
+                });
+            }
+            sidebarOverlay.addEventListener('click', closeSidebar);
+        }
     </script>
 </body>
 </html>

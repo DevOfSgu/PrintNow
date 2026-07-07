@@ -21,7 +21,7 @@
 
         <div class="row g-4">
             <!-- Cột trái: Form cấu hình -->
-            <div class="col-lg-8">
+            <div class="col-12 col-lg-8">
                 <form asp-action="AddToCart" method="post" enctype="multipart/form-data" id="orderForm" onsubmit="return validateForm()">
                     <input type="hidden" name="shopId" value="@Model.Id" />
                     <input type="hidden" name="totalPages" id="totalPagesInput" value="1" />
@@ -167,7 +167,7 @@
             </div>
 
             <!-- Cột phải: Hóa đơn tổng hợp (Giỏ hàng) -->
-            <div class="col-lg-4">
+            <div class="col-12 col-lg-4 mt-4 mt-lg-0">
                 <div class="card border-0 shadow-sm" style="border-radius: 12px; position: sticky; top: 20px;">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-4">Tóm tắt đơn hàng</h5>

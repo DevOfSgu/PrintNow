@@ -346,7 +346,7 @@ namespace PrintNow.Web.Controllers
             if (shop != null)
             {
                 shop.ShopName = updatedShop.ShopName;
-                shop.AddressText = updatedShop.AddressText;
+                shop.AddressText = updatedShop.AddressText ?? string.Empty;
                 shop.Latitude = updatedShop.Latitude;
                 shop.Longitude = updatedShop.Longitude;
                 shop.Description = updatedShop.Description;

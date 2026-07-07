@@ -15,6 +15,7 @@ namespace PrintNow.Web.Models
         [MaxLength(200)]
         public string ShopName { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ tiệm in.")]
         public string AddressText { get; set; } = string.Empty;
 
         public double? Latitude { get; set; }

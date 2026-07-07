@@ -72,3 +72,623 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* ===== RESPONSIVE MOBILE STYLES ===== */
+/* Optimized for iOS and Android phones */
+
+/* Ensure proper tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better touch targets for mobile */
+.btn,
+.nav-link,
+button,
+a {
+  touch-action: manipulation;
+}
+
+/* Sidebar close button inside sidebar header */
+.sidebar-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+  z-index: 11;
+}
+.sidebar-close-btn:hover {
+  background-color: #e2e8f0;
+}
+.sidebar-close-btn svg {
+  width: 20px;
+  height: 20px;
+  color: #475569;
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.sidebar-overlay.show {
+  opacity: 1;
+}
+
+/* Mobile hamburger button */
+.mobile-hamburger {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1001;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.mobile-hamburger:hover {
+  background-color: #f8fafc;
+}
+.mobile-hamburger svg {
+  width: 22px;
+  height: 22px;
+  color: var(--on-surface);
+}
+
+/* Mobile sidebar close button */
+.mobile-sidebar-close {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  z-index: 11;
+}
+.mobile-sidebar-close svg {
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+}
+
+/* Chat back button (visible only on mobile) */
+.chat-back-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+.chat-back-btn:hover {
+  background-color: #e2e8f0;
+}
+.chat-back-btn svg {
+  width: 20px;
+  height: 20px;
+  color: #475569;
+}
+
+/* Map toggle button (visible only on mobile) */
+.shop-list-toggle {
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 12px;
+  z-index: 1001;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.shop-list-toggle:hover {
+  background-color: #f8fafc;
+}
+.shop-list-toggle svg {
+  width: 22px;
+  height: 22px;
+  color: var(--on-surface);
+}
+
+/* Chatbot responsive */
+.chatbot-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+}
+
+/* ===== Responsive Breakpoints ===== */
+
+/* Tablet & below */
+@media (max-width: 991.98px) {
+  /* Customer/Admin layouts */
+  .customer-sidebar-header,
+  .admin-sidebar-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 12px 20px 0 !important;
+  }
+  .customer-sidebar,
+  .admin-sidebar {
+    position: fixed !important;
+    left: -280px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    z-index: 1000 !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1) !important;
+  }
+  .customer-sidebar.open,
+  .admin-sidebar.open {
+    left: 0 !important;
+  }
+
+  .mobile-hamburger {
+    display: flex;
+  }
+
+  .sidebar-overlay.show {
+    display: block !important;
+  }
+
+  .customer-main,
+  .admin-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .customer-content,
+  .admin-content {
+    padding: 60px 16px 24px !important;
+  }
+
+  /* Fix hamburger overlapping header content */
+  .customer-topbar,
+  .admin-topbar {
+    padding-top: 60px !important;
+  }
+
+  /* Navbar on main layout - hamburger doesn't overlap since it uses Bootstrap navbar */
+
+  .customer-topbar,
+  .admin-topbar {
+    padding: 16px !important;
+    padding-left: 60px !important;
+  }
+
+  /* Chat sidebar - full width on mobile, toggle with button */
+  .chat-container {
+    position: relative;
+    overflow: hidden !important;
+  }
+  .chat-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+    display: flex !important;
+    transition: transform 0.3s ease !important;
+  }
+  .chat-sidebar.hidden-mobile {
+    transform: translateX(-100%) !important;
+  }
+  .chat-window {
+    width: 100% !important;
+    min-width: 100% !important;
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 5;
+  }
+  .chat-window.hidden-mobile {
+    display: none !important;
+  }
+  .msg-wrapper {
+    max-width: 85% !important;
+  }
+
+  /* Back button in chat header on mobile */
+  .chat-back-btn {
+    display: inline-flex !important;
+  }
+
+  /* Chatbot window responsive */
+  .chatbot-window {
+    width: calc(100vw - 32px) !important;
+    max-width: 360px !important;
+    right: 0 !important;
+  }
+
+  /* Kanban horizontal scroll on mobile */
+  .kanban-board {
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    gap: 16px !important;
+  }
+  .kanban-column {
+    min-width: unset !important;
+    max-width: unset !important;
+    width: 100% !important;
+    max-height: unset !important;
+    min-height: auto !important;
+  }
+  .kanban-cards-container {
+    min-height: 100px !important;
+    max-height: 400px !important;
+  }
+
+  /* Tables - make them scrollable */
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Phone (max 576px) */
+@media (max-width: 575.98px) {
+  /* General */
+  body {
+    margin-bottom: 40px;
+  }
+
+  /* Auth pages */
+  .auth-card {
+    padding: 32px 24px !important;
+    border-radius: 12px !important;
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px !important;
+  }
+  .auth-card h1 {
+    font-size: 24px !important;
+  }
+
+  /* Home page */
+  .hero-section {
+    padding: 48px 0 !important;
+  }
+  .hero-section h1 {
+    font-size: 32px !important;
+  }
+  .hero-section .lead-text {
+    font-size: 16px !important;
+  }
+  
+  /* Layout fixes */
+  .navbar-custom {
+    padding: 12px 0 !important;
+  }
+  .navbar-brand img {
+    height: 28px !important;
+  }
+  
+  .customer-sidebar,
+  .admin-sidebar {
+    width: 260px !important;
+    left: -260px !important;
+  }
+
+  /* Chat container */
+  .chat-container {
+    height: calc(100vh - 100px) !important;
+    border-radius: 12px !important;
+  }
+  .chat-messages {
+    padding: 16px !important;
+  }
+  .chat-input-area {
+    padding: 12px 16px !important;
+  }
+  .conv-last-msg {
+    max-width: 120px !important;
+  }
+
+  /* Chatbot */
+  .chatbot-container {
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+  .chatbot-toggle {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .chatbot-window {
+    width: calc(100vw - 32px) !important;
+    height: 450px !important;
+    bottom: 64px !important;
+    right: 0 !important;
+  }
+
+  /* Cards & sections */
+  .card-body {
+    padding: 16px !important;
+  }
+  .settings-card-body {
+    padding: 16px !important;
+  }
+  .settings-card-header {
+    padding: 16px !important;
+  }
+
+  /* Kanban */
+  .kanban-column {
+    padding: 12px !important;
+  }
+  .order-card {
+    padding: 12px !important;
+  }
+  .file-item {
+    padding: 6px 10px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+  .file-name-text {
+    max-width: 100% !important;
+  }
+
+  /* Footer */
+  .footer-custom {
+    padding: 24px 0 !important;
+  }
+  .footer-custom .container {
+    flex-direction: column !important;
+    gap: 16px !important;
+    text-align: center !important;
+  }
+  .footer-links {
+    display: flex !important;
+    gap: 16px !important;
+  }
+  .footer-links a {
+    margin-left: 0 !important;
+  }
+
+  /* Button groups - stack on mobile */
+  .btn-group.w-100 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .btn-group.w-100 .btn:last-child:nth-child(3) {
+    grid-column: span 2;
+  }
+
+  /* Customer page map + list - hide map when list is showing */
+  .shop-list-column:not(.mobile-collapsed) + .map-column {
+    display: none !important;
+  }
+  .shop-list-column.mobile-collapsed {
+    display: none !important;
+  }
+  .shop-list-column.mobile-collapsed + .map-column {
+    display: block !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+  }
+  .shop-list-toggle {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 24px !important;
+    top: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 1001 !important;
+    background-color: var(--primary) !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 30px !important;
+    box-shadow: 0 4px 16px rgba(214, 40, 57, 0.3) !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    width: auto !important;
+    height: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+  }
+  .shop-list-toggle:hover {
+    background-color: #b91c1c !important;
+    transform: translateX(-50%) scale(1.05) !important;
+    color: white !important;
+  }
+
+  /* Settings page */
+  .coords-display-box {
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: flex-start !important;
+  }
+
+  /* Checkout page */
+  .selector-card {
+    padding: 16px !important;
+  }
+  .btn-chat-owner {
+    font-size: 12px !important;
+    padding: 8px 14px !important;
+  }
+
+  /* Order config */
+  .input-group {
+    width: 130px !important;
+  }
+
+  /* Shop detail - handled by grid */
+
+  /* Admin dashboard - responsive handled by col-12 */
+
+  /* Hero section fixes */
+  .hero-section {
+    padding: 48px 0 !important;
+    border-radius: 0 0 24px 24px !important;
+  }
+  .hero-section .btn-lg {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Feature cards on home */
+  .feature-card {
+    padding: 24px !important;
+  }
+
+  /* Modal */
+  .modal-dialog {
+    margin: 12px !important;
+  }
+
+  /* Map & shop list - fit on mobile (stacked layout) */
+  .shop-list-card {
+    height: auto !important;
+    max-height: none !important;
+  }
+  .map-column .card {
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+  }
+  .map-column #map {
+    height: 100% !important;
+  }
+  .shop-list-column.mobile-collapsed + .map-column .card {
+    height: calc(100vh - 120px) !important;
+    aspect-ratio: auto !important;
+  }
+  .shop-list-column .card-body {
+    padding-bottom: 8px !important;
+  }
+
+  /* Map container */
+  .map-container {
+    height: 200px !important;
+    min-height: 200px !important;
+  }
+  #map {
+    min-height: 200px !important;
+  }
+}
+
+/* Fix iOS input zoom */
+@media screen and (max-width: 575.98px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Fix notch on modern phones (iPhone X+) */
+@supports (padding: max(0px)) {
+  .chatbot-container {
+    bottom: max(24px, env(safe-area-inset-bottom)) !important;
+    right: max(24px, env(safe-area-inset-right)) !important;
+  }
+  .customer-sidebar,
+  .admin-sidebar {
+    padding-top: max(0px, env(safe-area-inset-top)) !important;
+  }
+  /* Fixed buttons - respect safe area on notched phones */
+  .mobile-hamburger {
+    top: max(12px, env(safe-area-inset-top, 12px)) !important;
+    left: max(12px, env(safe-area-inset-left, 12px)) !important;
+  }
+  .shop-list-toggle {
+    bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 24px)) !important;
+    top: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+/* Smooth scrolling */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Make sure modals work well on mobile */
+@media (max-width: 575.98px) {
+  .modal-content {
+    border-radius: 12px !important;
+  }
+  .table-custom th,
+  .table-custom td {
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+  }
+  
+  /* Cart page - responsive handled by grid */
+
+  /* Order details - responsive handled by flex utilities */
+
+  /* Messages */
+
+  .msg-wrapper {
+    max-width: 90% !important;
+  }
+
+  /* Checkout */
+  .checkout-title {
+    font-size: 20px !important;
+  }
+
+  /* Order history - responsive handled */
+
+  /* Location setup */
+  #map {
+    height: 300px !important;
+  }
+}
