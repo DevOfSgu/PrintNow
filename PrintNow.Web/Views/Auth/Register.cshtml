@@ -1,0 +1,215 @@
+@{
+    ViewData["Title"] = "Đăng ký";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PrintNow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            background-color: var(--secondary-container);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 0;
+        }
+        .auth-card {
+            background-color: var(--surface-container-lowest);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        .logo {
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .logo img {
+            height: 32px;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--on-surface);
+            margin-bottom: 24px;
+        }
+        .toggle-group {
+            display: flex;
+            background-color: var(--surface-container-low);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--on-surface-variant);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .toggle-btn.active {
+            background-color: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--on-surface);
+        }
+        input.form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #E5E5E5;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        input.form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-fixed);
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: var(--on-primary-fixed-variant);
+        }
+        .register-link {
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--on-surface-variant);
+        }
+        .register-link a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .text-danger {
+            color: var(--error);
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .shop-field {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <div class="logo">
+            <img src="~/logoapp.png" alt="PrintNow" style="height: 36px; object-fit: contain;" />
+        </div>
+        <h1>Tạo tài khoản mới</h1>
+        
+        <div class="toggle-group">
+            <div class="toggle-btn active" id="btn-customer" onclick="setRole('Customer')">Khách hàng</div>
+            <div class="toggle-btn" id="btn-shop" onclick="setRole('ShopOwner')">Chủ tiệm in</div>
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <span class="text-danger">@ViewBag.Error</span>
+        }
+
+        <form asp-controller="Auth" asp-action="Register" method="post">
+            <input type="hidden" id="roleInput" name="role" value="@(ViewBag.Role ?? "Customer")" />
+            
+            <div class="form-group">
+                <label for="fullName">Họ và tên</label>
+                <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Nguyễn Văn A" required />
+            </div>
+            <div class="form-group">
+                <label for="phone">Số điện thoại</label>
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="0901 234 567" required />
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="email@vi-du.com" required />
+            </div>
+            
+            <div class="form-group shop-field" id="shopNameGroup">
+                <label for="shopName">Tên tiệm in</label>
+                <input type="text" id="shopName" name="shopName" class="form-control" placeholder="In Ấn Sài Gòn" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required />
+            </div>
+            <button type="submit" class="btn-primary">Đăng ký</button>
+        </form>
+
+        <div class="register-link">
+            Đã có tài khoản? <a asp-action="Login">Đăng nhập ngay</a>
+        </div>
+    </div>
+
+    <script>
+        function setRole(role) {
+            document.getElementById('roleInput').value = role;
+            
+            var btnCustomer = document.getElementById('btn-customer');
+            var btnShop = document.getElementById('btn-shop');
+            var shopGroup = document.getElementById('shopNameGroup');
+            
+            if (role === 'ShopOwner') {
+                btnCustomer.classList.remove('active');
+                btnShop.classList.add('active');
+                shopGroup.style.display = 'block';
+                document.getElementById('shopName').required = true;
+            } else {
+                btnShop.classList.remove('active');
+                btnCustomer.classList.add('active');
+                shopGroup.style.display = 'none';
+                document.getElementById('shopName').required = false;
+            }
+        }
+        
+        // Initialize based on ViewBag.Role if present
+        var initRole = '@(ViewBag.Role ?? "Customer")';
+        if (initRole) {
+            setRole(initRole);
+        }
+    </script>
+</body>
+</html>

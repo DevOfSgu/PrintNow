@@ -1,0 +1,394 @@
+@model PrintNow.Web.Models.Shop
+@{
+    ViewData["Title"] = "Cấu hình Cửa hàng";
+    Layout = "_ShopAdminLayout";
+}
+
+<style>
+    /* Tổng quan giao diện cấu hình */
+    .settings-header {
+        margin-bottom: 28px;
+    }
+    .settings-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .settings-subtitle {
+        font-size: 13.5px;
+        color: #64748b;
+        margin-top: 4px;
+    }
+    
+    .settings-card {
+        background-color: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .settings-card-header {
+        padding: 24px 24px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .settings-card-title {
+        font-size: 16.5px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0;
+    }
+    .settings-card-body {
+        padding: 24px;
+    }
+    
+    .form-group-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+    .form-input-custom {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13.5px;
+        width: 100%;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .form-input-custom:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+    .form-input-icon-wrapper {
+        position: relative;
+    }
+    .form-input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 15px;
+    }
+    .form-input-icon-wrapper .form-input-custom {
+        padding-left: 36px;
+    }
+    
+    .tip-box {
+        background-color: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        gap: 12px;
+        color: #991b1b;
+        margin-top: 24px;
+    }
+    .tip-box-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+    .tip-box-text {
+        font-size: 12.5px;
+        line-height: 1.5;
+    }
+    
+    /* Bản đồ & Vị trí */
+    .map-container {
+        height: 280px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #cbd5e1;
+        margin-top: 14px;
+    }
+    .coords-display-box {
+        background-color: #f1f5f9;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 11.5px;
+        color: #334155;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 16px;
+    }
+    
+    .btn-submit-custom {
+        background-color: var(--primary);
+        color: white;
+        font-weight: 600;
+        font-size: 13.5px;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s;
+    }
+    .btn-submit-custom:hover {
+        background-color: #b91c1c;
+    }
+    
+    .btn-outline-custom {
+        background-color: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        font-weight: 600;
+        font-size: 13px;
+        border-radius: 8px;
+        padding: 8px 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .btn-outline-custom:hover {
+        background-color: #fef2f2;
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Header cấu hình -->
+    <div class="settings-header">
+        <h3 class="settings-title">Cấu hình Cửa hàng</h3>
+        <p class="settings-subtitle">Quản lý thông tin hiển thị và vị trí địa lý của tiệm trên nền tảng PrintNow.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; font-size: 13.5px;">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert" style="border-radius: 12px; font-size: 13.5px;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["WarningMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Form chính bao quanh cả 2 cột để lưu trữ đồng bộ -->
+    <form asp-action="Settings" method="post" enctype="multipart/form-data" id="settingsForm">
+        @Html.AntiForgeryToken()
+        
+        <!-- Hidden Lat/Lng Inputs -->
+        <input type="hidden" asp-for="Latitude" id="latInput" />
+        <input type="hidden" asp-for="Longitude" id="lngInput" />
+
+        <div class="row g-4">
+            <!-- CỘT TRÁI: THÔNG TIN CƠ BẢN -->
+            <div class="col-lg-7">
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <i class="bi bi-shop text-danger fs-5"></i>
+                        <h5 class="settings-card-title">Thông tin cơ bản</h5>
+                    </div>
+                    
+                    <div class="settings-card-body">
+                        <!-- Tải hình ảnh tiệm -->
+                        <div class="mb-4 text-center d-flex flex-column align-items-center">
+                            <div class="position-relative" style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; background-color: #f1f5f9; border: 2px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                                <img src="@(!string.IsNullOrEmpty(Model.ImageUrl) ? Model.ImageUrl : "/images/shops/anhmau.jpg")" alt="Shop Image" style="width: 100%; height: 100%; object-fit: cover;" id="imagePreview" />
+                            </div>
+                            <label for="imageFile" class="btn btn-sm btn-light border mt-2" style="border-radius: 6px; font-size: 11px; font-weight: 600;">Thay logo tiệm</label>
+                            <input type="file" id="imageFile" name="imageFile" accept="image/*" class="d-none" onchange="previewImage(event)" />
+                        </div>
+
+                        <!-- Tên tiệm in -->
+                        <div class="mb-3">
+                            <label asp-for="ShopName" class="form-group-label">Tên tiệm in</label>
+                            <input asp-for="ShopName" class="form-input-custom" placeholder="Ví dụ: PrintNow Flagship Store" required />
+                        </div>
+
+                        <!-- Hàng: Số điện thoại + Email -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-group-label">Số điện thoại liên hệ</label>
+                                <input type="text" name="phone" value="@Model.Owner?.Phone" class="form-input-custom" placeholder="Nhập số điện thoại" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-group-label">Email</label>
+                                <input type="email" name="email" value="@Model.Owner?.Email" class="form-input-custom" placeholder="contact@printnow-shop.vn" />
+                            </div>
+                        </div>
+
+                        <!-- Giờ mở cửa -->
+                        <div class="mb-3">
+                            <label asp-for="OperatingHoursText" class="form-group-label">Giờ mở cửa</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="form-input-icon-wrapper flex-grow-1">
+                                    <i class="bi bi-clock form-input-icon"></i>
+                                    <input asp-for="OperatingHoursText" class="form-input-custom" placeholder="08:00 - 20:00" />
+                                </div>
+                                <span class="text-muted small" style="white-space: nowrap;">Tất cả các ngày trong tuần</span>
+                            </div>
+                        </div>
+
+                        <!-- Mô tả ngắn -->
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-group-label">Mô tả ngắn về tiệm</label>
+                            <textarea asp-for="Description" class="form-input-custom" rows="4" placeholder="Chuyên cung cấp dịch vụ in nhanh kỹ thuật số, in khổ lớn và thiết kế đồ họa chuyên nghiệp..."></textarea>
+                        </div>
+
+                        <!-- Nút cập nhật thông tin -->
+                        <div class="text-end">
+                            <button type="submit" class="btn-submit-custom">
+                                <i class="bi bi-file-earmark-check"></i> Cập nhật thông tin
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mẹo nhỏ cho chủ tiệm -->
+                <div class="tip-box shadow-sm">
+                    <i class="bi bi-info-circle-fill tip-box-icon"></i>
+                    <div class="tip-box-text">
+                        <strong>Mẹo nhỏ cho chủ tiệm:</strong> Việc cập nhật đầy đủ thông tin và mô tả hấp dẫn giúp tiệm của bạn tăng 40% tỷ lệ đặt hàng thành công từ khách hàng mới trên hệ thống.
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI: VỊ TRÍ & BẢN ĐỒ -->
+            <div class="col-lg-5">
+                <div class="settings-card h-100 d-flex flex-column">
+                    <div class="settings-card-header">
+                        <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
+                        <h5 class="settings-card-title">Vị trí & Bản đồ</h5>
+                    </div>
+                    
+                    <div class="settings-card-body flex-grow-1 d-flex flex-column">
+                        <!-- Địa chỉ cụ thể -->
+                        <div class="mb-3">
+                            <label asp-for="AddressText" class="form-group-label">Địa chỉ cụ thể</label>
+                            <input asp-for="AddressText" class="form-input-custom" placeholder="123 Đường Lê Lợi, Phường Bến Nghé, Quận 1..." />
+                        </div>
+
+                        <!-- Bản đồ vị trí -->
+                        <div class="map-container flex-grow-1 min-height-250">
+                            <div id="map" style="width: 100%; height: 100%; min-height: 250px; z-index: 1;"></div>
+                        </div>
+
+                        <!-- Nút thao tác nhanh bản đồ -->
+                        <div class="d-flex gap-3 mt-3">
+                            <button type="button" class="btn-outline-custom flex-grow-1 justify-content-center" id="btnGhimHienTai">
+                                <i class="bi bi-geo"></i> Ghim hiện tại
+                            </button>
+                            <button type="submit" class="btn-outline-custom flex-grow-1 justify-content-center">
+                                <i class="bi bi-floppy"></i> Lưu tọa độ
+                            </button>
+                        </div>
+
+                        <!-- Box tọa độ hiển thị -->
+                        <div class="coords-display-box shadow-xs">
+                            <span class="text-muted">Tọa độ hiển thị:</span>
+                            <span class="fw-bold" id="coordsText">
+                                @(Model.Latitude.HasValue ? Model.Latitude.Value.ToString("F4") : "10.7769")° N, @(Model.Longitude.HasValue ? Model.Longitude.Value.ToString("F4") : "106.7089")° E
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('imagePreview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        var map;
+        var marker;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tọa độ khởi tạo (nếu có thì dùng của tiệm, không thì mặc định Q1 TPHCM)
+            var initialLat = @(Model.Latitude.HasValue ? Model.Latitude.Value.ToString("0.0000000", System.Globalization.CultureInfo.InvariantCulture) : "10.7769");
+            var initialLng = @(Model.Longitude.HasValue ? Model.Longitude.Value.ToString("0.0000000", System.Globalization.CultureInfo.InvariantCulture) : "106.7089");
+
+            map = L.map('map').setView([initialLat, initialLng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            var shopIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            // Ghim điểm trên bản đồ
+            marker = L.marker([initialLat, initialLng], {
+                icon: shopIcon,
+                draggable: true
+            }).addTo(map);
+
+            function updateCoordsDisplay(lat, lng) {
+                document.getElementById('coordsText').innerText = `${parseFloat(lat).toFixed(4)}° N, ${parseFloat(lng).toFixed(4)}° E`;
+            }
+
+            // Đồng bộ dữ liệu khi kéo ghim
+            marker.on('dragend', function (event) {
+                var position = marker.getLatLng();
+                document.getElementById('latInput').value = position.lat;
+                document.getElementById('lngInput').value = position.lng;
+                updateCoordsDisplay(position.lat, position.lng);
+            });
+            
+            // Đồng bộ khi bấm chọn trên bản đồ
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                document.getElementById('latInput').value = e.latlng.lat;
+                document.getElementById('lngInput').value = e.latlng.lng;
+                updateCoordsDisplay(e.latlng.lat, e.latlng.lng);
+            });
+
+            // Nút ghim vị trí hiện tại của thiết bị
+            document.getElementById('btnGhimHienTai').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        var lat = position.coords.latitude;
+                        var lng = position.coords.longitude;
+                        marker.setLatLng([lat, lng]);
+                        map.setView([lat, lng], 15);
+                        document.getElementById('latInput').value = lat;
+                        document.getElementById('lngInput').value = lng;
+                        updateCoordsDisplay(lat, lng);
+                    }, function() {
+                        alert("Không thể tự động định vị. Vui lòng ghim vị trí bằng tay trên bản đồ.");
+                    });
+                } else {
+                    alert("Trình duyệt không hỗ trợ Geolocation.");
+                }
+            });
+            
+            // Đảm bảo có sẵn dữ liệu tọa độ khi submit nếu chưa kéo thả ghim
+            if (!document.getElementById('latInput').value) {
+                document.getElementById('latInput').value = initialLat;
+                document.getElementById('lngInput').value = initialLng;
+            }
+        });
+    </script>
+}

@@ -1,0 +1,551 @@
+@model PrintNow.Web.Models.Conversation
+@{
+    ViewData["Title"] = "Tin nhắn";
+    Layout = "_ShopAdminLayout";
+    var conversations = ViewBag.Conversations as List<PrintNow.Web.Models.Conversation> ?? new List<PrintNow.Web.Models.Conversation>();
+    var activeConversationId = ViewBag.ActiveConversationId as Guid?;
+    var currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+}
+
+<style>
+    /* Tổng quan bố cục nhắn tin */
+    .chat-container {
+        display: flex;
+        background-color: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        height: calc(100vh - 165px);
+        overflow: hidden;
+    }
+    
+    /* Panel trái: Danh sách hội thoại */
+    .chat-sidebar {
+        width: 320px;
+        border-right: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        flex-shrink: 0;
+    }
+    .chat-sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .search-input {
+        background-color: #f1f5f9;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 16px;
+        font-size: 13px;
+        width: 100%;
+        outline: none;
+    }
+    .conversation-list {
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    .conversation-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f8fafc;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+    .conversation-item:hover {
+        background-color: #f8fafc;
+    }
+    .conversation-item.active {
+        background-color: #f1f5f9;
+    }
+    .conv-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background-color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #475569;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    .conv-info {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    .conv-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #0f172a;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .conv-time {
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 400;
+    }
+    .conv-last-msg {
+        font-size: 12.5px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-truncate: ellipsis;
+        max-width: 180px;
+    }
+    .unread-badge {
+        width: 8px;
+        height: 8px;
+        background-color: var(--primary);
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    /* Panel phải: Cửa sổ chat */
+    .chat-window {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #f8fafc;
+    }
+    .chat-header {
+        background-color: white;
+        padding: 16px 24px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: justify-content;
+        align-items: center;
+    }
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .chat-header-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: #0f172a;
+    }
+    .chat-header-status {
+        font-size: 12px;
+        color: #10b981;
+        font-weight: 500;
+    }
+
+    /* Vùng chứa các bong bóng chat */
+    .chat-messages {
+        flex-grow: 1;
+        padding: 24px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .chat-date-divider {
+        align-self: center;
+        background-color: #e2e8f0;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        margin: 8px 0;
+    }
+    .msg-wrapper {
+        display: flex;
+        gap: 10px;
+        max-width: 70%;
+    }
+    .msg-wrapper.received {
+        align-self: flex-start;
+    }
+    .msg-wrapper.sent {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+    .msg-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        flex-shrink: 0;
+    }
+    .msg-bubble {
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        position: relative;
+    }
+    .received .msg-bubble {
+        background-color: white;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+        border-top-left-radius: 2px;
+    }
+    .sent .msg-bubble {
+        background-color: var(--primary);
+        color: white;
+        border-top-right-radius: 2px;
+    }
+    .msg-time {
+        font-size: 10px;
+        margin-top: 4px;
+        display: block;
+        text-align: right;
+    }
+    .received .msg-time {
+        color: #94a3b8;
+    }
+    .sent .msg-time {
+        color: #ffdad8;
+    }
+
+    /* Panel gõ tin nhắn */
+    .chat-input-area {
+        background-color: white;
+        padding: 16px 24px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .chat-input-wrapper {
+        background-color: #f1f5f9;
+        border-radius: 16px;
+        padding: 8px 16px;
+        border: 1px solid #e2e8f0;
+    }
+    .chat-textarea {
+        background: transparent;
+        border: none;
+        outline: none;
+        width: 100%;
+        resize: none;
+        font-size: 13.5px;
+        color: #334155;
+        padding-top: 8px;
+        min-height: 40px;
+        max-height: 120px;
+    }
+    .chat-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .chat-tool-btn {
+        color: #64748b;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+    }
+    .chat-tool-btn:hover {
+        background-color: #e2e8f0;
+        color: #334155;
+    }
+    .btn-send-message {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 18px;
+        font-weight: 600;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.2s;
+    }
+    .btn-send-message:hover {
+        background-color: var(--on-primary-fixed-variant);
+    }
+</style>
+
+<div class="chat-container">
+    <!-- SIDEBAR: DANH SÁCH CUỘC HỘI THOẠI -->
+    <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <h5 class="fw-bold mb-3" style="font-size: 18px; color: #0f172a;">Tin nhắn</h5>
+            <input type="text" class="search-input" placeholder="Tìm kiếm khách hàng..." />
+        </div>
+        <div class="conversation-list">
+            @foreach (var conv in conversations)
+            {
+                var isSelected = activeConversationId == conv.Id;
+                var lastMsg = conv.Messages.OrderBy(m => m.CreatedAt).LastOrDefault();
+                var hasUnread = conv.Messages.Any(m => m.SenderId != currentUserId && !m.IsRead);
+                
+                <a href="/ShopAdmin/Messages?customerId=@conv.CustomerId" class="conversation-item @(isSelected ? "active" : "")" data-conv-id="@conv.Id">
+                    <div class="conv-avatar">
+                        @conv.Customer.FullName.Substring(0, 1).ToUpper()
+                    </div>
+                    <div class="conv-info">
+                        <div class="conv-name">
+                            <span class="text-truncate" style="max-width: 150px;">@conv.Customer.FullName</span>
+                            <span class="conv-time">
+                                @if (lastMsg != null)
+                                {
+                                    @lastMsg.CreatedAt.ToLocalTime().ToString("HH:mm")
+                                }
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="conv-last-msg text-truncate" id="last-msg-@conv.Id">
+                                @if (lastMsg != null)
+                                {
+                                    @lastMsg.Content
+                                }
+                                else
+                                {
+                                    <span>Chưa có tin nhắn</span>
+                                }
+                            </span>
+                            @if (hasUnread)
+                            {
+                                <span class="unread-badge" id="unread-badge-@conv.Id"></span>
+                            }
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- CỬA SỔ CHAT HOẠT ĐỘNG -->
+    <div class="chat-window">
+        @if (Model != null)
+        {
+            <!-- Header Chat -->
+            <div class="chat-header justify-content-between">
+                <div class="chat-header-info">
+                    <div class="conv-avatar" style="width: 38px; height: 38px;">
+                        @Model.Customer.FullName.Substring(0, 1).ToUpper()
+                    </div>
+                    <div>
+                        <div class="chat-header-name">@Model.Customer.FullName</div>
+                        <div class="chat-header-status"><span class="pulse-dot" style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-right: 4px;"></span>Khách hàng</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 text-muted fs-5">
+                    <i class="bi bi-telephone cursor-pointer hover-text-dark" title="Gọi điện"></i>
+                    <i class="bi bi-info-circle cursor-pointer hover-text-dark" title="Thông tin khách hàng"></i>
+                </div>
+            </div>
+
+            <!-- Vùng hiển thị tin nhắn -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-date-divider">Hôm nay</div>
+                
+                @foreach (var msg in Model.Messages.OrderBy(m => m.CreatedAt))
+                {
+                    var isSentByMe = msg.SenderId == currentUserId;
+                    
+                    <div class="msg-wrapper @(isSentByMe ? "sent" : "received")">
+                        <div class="msg-avatar">
+                            @if (isSentByMe)
+                            {
+                                @User.Identity.Name?.Substring(0,1).ToUpper()
+                            }
+                            else
+                            {
+                                @Model.Customer.FullName.Substring(0,1).ToUpper()
+                            }
+                        </div>
+                        <div class="msg-bubble shadow-sm">
+                            <div class="msg-content">@msg.Content</div>
+                            <span class="msg-time">
+                                @msg.CreatedAt.ToLocalTime().ToString("HH:mm")
+                                @if (isSentByMe)
+                                {
+                                    <i class="bi bi-check2 ms-1"></i>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Vùng gõ & gửi tin nhắn -->
+            <div class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <textarea class="chat-textarea" id="chatInput" placeholder="Nhập tin nhắn..." rows="1"></textarea>
+                    <div class="chat-actions">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-image chat-tool-btn" title="Gửi ảnh"></i>
+                            <i class="bi bi-paperclip chat-tool-btn" title="Đính kèm file"></i>
+                            <i class="bi bi-emoji-smile chat-tool-btn" title="Emoji"></i>
+                        </div>
+                        <button class="btn-send-message" id="btnSend">
+                            Gửi tin nhắn <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-center text-muted small mt-2" style="font-size: 11px;">
+                    <i class="bi bi-shield-lock me-1"></i> Tin nhắn được bảo mật và lưu trữ an toàn trên hệ thống.
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                <i class="bi bi-chat-right-dots" style="font-size: 48px;"></i>
+                <h6 class="fw-bold mt-3">Chào mừng bạn đến với mục Tin nhắn</h6>
+                <p class="small text-center max-width-300">Chọn một cuộc hội thoại bên trái để bắt đầu trao đổi với khách hàng.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        const activeConversationId = "@(activeConversationId?.ToString())";
+        const currentUserId = @currentUserId;
+
+        // Tự động cuộn xuống đáy tin nhắn khi tải trang
+        const chatMessages = document.getElementById("chatMessages");
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Khởi tạo SignalR
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start().then(function () {
+            console.log("SignalR Connected!");
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // Nhận tin nhắn mới từ SignalR
+        connection.on("ReceiveMessage", function (message) {
+            console.log("New Message Received: ", message);
+            
+            // Cập nhật text xem trước ở sidebar trái
+            const lastMsgElement = document.getElementById("last-msg-" + message.conversationId);
+            if (lastMsgElement) {
+                lastMsgElement.innerText = message.content;
+            }
+
+            // Nếu tin nhắn thuộc cuộc hội thoại đang mở VÀ không phải của mình (đã render optimistic)
+            if (message.conversationId === activeConversationId) {
+                const isMe = message.senderId === currentUserId;
+                // Tin của mình đã được thêm optimistic → bỏ qua để tránh nhân đôi
+                if (isMe) return;
+
+                const senderInitial = message.senderName ? message.senderName.substring(0, 1).toUpperCase() : "U";
+                const bubbleHtml = `
+                    <div class="msg-wrapper received">
+                        <div class="msg-avatar">
+                            ${senderInitial}
+                        </div>
+                        <div class="msg-bubble shadow-sm">
+                            <div class="msg-content">${escapeHtml(message.content)}</div>
+                            <span class="msg-time">
+                                ${message.createdAt}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                
+                if (chatMessages) {
+                    chatMessages.insertAdjacentHTML("beforeend", bubbleHtml);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } else {
+                // Hiển thị chấm đỏ thông báo chưa đọc ở cuộc hội thoại khác
+                const unreadBadge = document.getElementById("unread-badge-" + message.conversationId);
+                if (unreadBadge) {
+                    unreadBadge.style.display = "inline-block";
+                } else {
+                    const convItem = document.querySelector(`[data-conv-id="${message.conversationId}"]`);
+                    if (convItem) {
+                        const badgeContainer = convItem.querySelector(".d-flex.justify-content-between.align-items-center");
+                        if (badgeContainer && !badgeContainer.querySelector(".unread-badge")) {
+                            badgeContainer.insertAdjacentHTML("beforeend", `<span class="unread-badge" id="unread-badge-${message.conversationId}"></span>`);
+                        }
+                    }
+                }
+            }
+        });
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Gửi tin nhắn khi click nút Gửi hoặc gõ Enter
+        const chatInput = document.getElementById("chatInput");
+        const btnSend = document.getElementById("btnSend");
+
+        if (chatInput && btnSend) {
+            function appendMyMessage(text) {
+                const now = new Date();
+                const hhmm = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const myInitial = "@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "U")";
+                const bubbleHtml = `
+                    <div class="msg-wrapper sent">
+                        <div class="msg-avatar">${myInitial}</div>
+                        <div class="msg-bubble shadow-sm">
+                            <div class="msg-content">${escapeHtml(text)}</div>
+                            <span class="msg-time">
+                                ${hhmm}
+                                <i class="bi bi-check2 ms-1"></i>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                if (chatMessages) {
+                    chatMessages.insertAdjacentHTML("beforeend", bubbleHtml);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+
+            function sendMessage() {
+                const text = chatInput.value.trim();
+                if (text === "" || !activeConversationId) return;
+
+                // Optimistic: thêm tin nhắn của mình vào UI ngay lập tức
+                appendMyMessage(text);
+                chatInput.value = "";
+                chatInput.focus();
+
+                connection.invoke("SendMessage", activeConversationId, text).catch(function(err) {
+                    console.error("Lỗi gửi tin nhắn: " + err.toString());
+                });
+            }
+
+            btnSend.addEventListener("click", sendMessage);
+            chatInput.addEventListener("keydown", function(e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+    </script>
+}

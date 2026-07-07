@@ -1,0 +1,288 @@
+@model PrintNow.Web.Models.Order
+@{
+    ViewData["Title"] = "Thanh toán đơn hàng";
+    Layout = "_CustomerLayout";
+}
+
+<style>
+    .checkout-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    
+    .checkout-section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #334155;
+        margin-top: 32px;
+        margin-bottom: 16px;
+    }
+
+    .selector-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background: white;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    
+    .selector-card.selected {
+        border: 2px solid var(--primary);
+        box-shadow: 0 4px 12px rgba(214, 40, 57, 0.04);
+    }
+    
+    .selector-card:hover:not(.selected) {
+        border-color: #cbd5e1;
+    }
+
+    .momo-logo {
+        width: 40px;
+        height: 40px;
+        background-color: #a50064;
+        color: white;
+        border-radius: 8px;
+        font-weight: 900;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .cash-logo {
+        width: 40px;
+        height: 40px;
+        background-color: #f1f5f9;
+        color: #475569;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .btn-chat-owner {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: 600;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    .btn-chat-owner:hover {
+        background-color: var(--on-primary-fixed-variant);
+        color: white;
+    }
+    
+    .btn-confirm-checkout {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 14px;
+        font-weight: 700;
+        font-size: 16px;
+        width: 100%;
+        margin-top: 24px;
+        transition: background-color 0.2s;
+    }
+    .btn-confirm-checkout:hover {
+        background-color: var(--on-primary-fixed-variant);
+    }
+</style>
+
+<div class="container py-2" style="max-width: 960px;">
+    <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+        <span class="text-muted small">Thanh toán đơn hàng #PN-@Model.Id</span>
+        <a href="/Customer/Cart" class="text-decoration-none text-muted small"><i class="bi bi-chevron-left"></i> Quay lại giỏ hàng</a>
+    </div>
+
+    <form asp-action="ConfirmCheckout" method="post" id="checkoutForm">
+        <input type="hidden" name="orderId" value="@Model.Id" />
+        
+        <h4 class="checkout-title">Thanh toán đơn hàng</h4>
+
+        <!-- Tóm tắt đơn hàng -->
+        <div class="card border-0 shadow-sm mt-4" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3" style="color: #475569; font-size: 14px;">Tóm tắt đơn hàng</h6>
+                
+                <!-- Danh sách file in -->
+                <div class="mb-4">
+                    @foreach (var detail in Model.OrderDetails)
+                    {
+                        <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; flex-shrink: 0;">
+                                    <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold m-0" style="font-size: 14px; color: #1e293b;">@detail.FileName</h6>
+                                    <span class="text-muted" style="font-size: 12px;">
+                                        Khổ: @detail.PaperSize &bull; @(detail.IsColor ? "In màu" : "Trắng đen") &bull; @detail.Sides mặt &bull; Số lượng: x@detail.Quantity
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="fw-bold" style="font-size: 14px; color: #1e293b;">@detail.SubTotal.ToString("N0")đ</span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Tính tiền -->
+                <div class="d-flex flex-column gap-2" style="font-size: 14px;">
+                    <div class="d-flex justify-content-between text-muted">
+                        <span>Tạm tính:</span>
+                        <span class="fw-semibold text-dark">@Model.TotalAmount.ToString("N0")đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted">
+                        <span>Phí vận chuyển:</span>
+                        <span class="fw-semibold text-dark" id="shippingFeeText">0đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-3 mt-1">
+                        <span class="fw-bold" style="font-size: 15px;">Tổng thanh toán:</span>
+                        <span class="fw-bold text-danger fs-5" id="totalAmountText" data-subtotal="@Model.TotalAmount">@Model.TotalAmount.ToString("N0")đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phương thức nhận hàng -->
+        <h6 class="checkout-section-title">Phương thức nhận hàng</h6>
+        <input type="hidden" name="deliveryMethod" id="deliveryMethodInput" value="Pickup" />
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="selector-card" id="card-delivery" onclick="selectDeliveryMethod('Delivery')">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="text-danger fs-4 mt-1"><i class="bi bi-truck"></i></div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-2" style="font-size: 15px;">Giao tận nơi</h6>
+                            <input type="text" class="form-control form-control-sm mt-2" name="shippingAddress" id="shippingAddressInput" placeholder="Nhập địa chỉ giao hàng của bạn..." onclick="event.stopPropagation()" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="selector-card selected" id="card-pickup" onclick="selectDeliveryMethod('Pickup')">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="text-danger fs-4 mt-1"><i class="bi bi-shop"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-2" style="font-size: 15px;">Tới lấy tại cửa hàng</h6>
+                            <p class="text-muted small mb-0">Địa chỉ tiệm: @Model.Shop.AddressText</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phương thức thanh toán -->
+        <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
+            <h6 class="checkout-section-title m-0">Phương thức thanh toán</h6>
+            <a href="/Customer/Messages?shopId=@Model.ShopId" class="btn-chat-owner">
+                <i class="bi bi-chat-dots-fill"></i> Chat với chủ tiệm
+            </a>
+        </div>
+        
+        <input type="hidden" name="paymentMethod" id="paymentMethodInput" value="Cash" />
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="selector-card" id="card-momo" onclick="selectPaymentMethod('MoMo')">
+                    <div class="d-flex gap-3 align-items-center">
+                        <img src="/momo.png" alt="MoMo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;" />
+                        <div>
+                            <h6 class="fw-bold mb-0" style="font-size: 15px;">Ví MoMo</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="selector-card selected" id="card-cash" onclick="selectPaymentMethod('Cash')">
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="cash-logo"><i class="bi bi-cash-stack"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-0" style="font-size: 15px;">Thanh toán khi nhận hàng</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nút xác nhận -->
+        <button type="submit" class="btn-confirm-checkout">
+            Xác nhận & Thanh toán
+        </button>
+    </form>
+</div>
+
+<script>
+    const subtotal = @Html.Raw(Model.TotalAmount);
+    const shippingFeeVal = 20000;
+
+    function selectDeliveryMethod(method) {
+        document.getElementById('deliveryMethodInput').value = method;
+        
+        const cardPickup = document.getElementById('card-pickup');
+        const cardDelivery = document.getElementById('card-delivery');
+        const addressInput = document.getElementById('shippingAddressInput');
+        const shippingFeeText = document.getElementById('shippingFeeText');
+        const totalAmountText = document.getElementById('totalAmountText');
+
+        if (method === 'Delivery') {
+            cardPickup.classList.remove('selected');
+            cardDelivery.classList.add('selected');
+            addressInput.required = true;
+            
+            // Cập nhật phí ship và tổng tiền
+            shippingFeeText.innerText = formatCurrency(shippingFeeVal);
+            totalAmountText.innerText = formatCurrency(subtotal + shippingFeeVal);
+        } else {
+            cardDelivery.classList.remove('selected');
+            cardPickup.classList.add('selected');
+            addressInput.required = false;
+            addressInput.value = ''; // clear address
+
+            // Reset phí ship và tổng tiền
+            shippingFeeText.innerText = '0đ';
+            totalAmountText.innerText = formatCurrency(subtotal);
+        }
+    }
+
+    function selectPaymentMethod(method) {
+        document.getElementById('paymentMethodInput').value = method;
+        
+        const cardCash = document.getElementById('card-cash');
+        const cardMomo = document.getElementById('card-momo');
+
+        if (method === 'MoMo') {
+            cardCash.classList.remove('selected');
+            cardMomo.classList.add('selected');
+        } else {
+            cardMomo.classList.remove('selected');
+            cardCash.classList.add('selected');
+        }
+    }
+
+    function formatCurrency(value) {
+        return value.toLocaleString('vi-VN') + 'đ';
+    }
+
+    // Ngăn chặn submit form nếu chưa nhập địa chỉ khi chọn giao hàng tận nơi
+    document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+        const method = document.getElementById('deliveryMethodInput').value;
+        const address = document.getElementById('shippingAddressInput').value.trim();
+        if (method === 'Delivery' && address === '') {
+            e.preventDefault();
+            alert('Vui lòng nhập địa chỉ giao hàng của bạn.');
+        }
+    });
+</script>

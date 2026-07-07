@@ -1,0 +1,102 @@
+@model PrintNow.Web.Models.Shop
+@{
+    ViewData["Title"] = "Cập nhật vị trí";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold" style="color: var(--primary);">Thiết lập vị trí tiệm in</h2>
+        <p class="text-muted">Kéo thả ghim trên bản đồ để chọn vị trí chính xác của tiệm in.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div id="map" style="width: 100%; height: 500px; border-radius: 16px; border: 1px solid #E5E5E5; position: relative;">
+            <div id="loadingMsg" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 10px; border-radius: 8px;">Đang tải bản đồ...</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+            <div class="card-body p-4">
+                <form asp-action="UpdateLocation" method="post">
+                    <input type="hidden" id="lat" name="lat" value="@(Model.Latitude ?? 10.762622)" />
+                    <input type="hidden" id="lng" name="lng" value="@(Model.Longitude ?? 106.660172)" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tọa độ đã chọn</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="displayLat" class="form-control" readonly value="@Model.Latitude" placeholder="Vĩ độ" />
+                            <input type="text" id="displayLng" class="form-control" readonly value="@Model.Longitude" placeholder="Kinh độ" />
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="addressText" class="form-label fw-bold">Địa chỉ chi tiết</label>
+                        <textarea id="addressText" name="addressText" class="form-control" rows="3" placeholder="Ví dụ: 123 Đường ABC, Quận X, TP.HCM" required>@Model.AddressText</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" style="background-color: var(--primary); border: none; padding: 14px; border-radius: 8px; font-weight: 600;">Lưu vị trí</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100 mt-2" style="border-radius: 8px; padding: 14px; font-weight: 600;">Bỏ qua</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var defaultLat = @(Model.Latitude?.ToString("G", System.Globalization.CultureInfo.InvariantCulture) ?? "10.762622");
+            var defaultLng = @(Model.Longitude?.ToString("G", System.Globalization.CultureInfo.InvariantCulture) ?? "106.660172");
+            var hasLocation = @(Model.Latitude.HasValue ? "true" : "false");
+
+            if (!hasLocation && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    initMap(position.coords.latitude, position.coords.longitude);
+                }, function () {
+                    initMap(defaultLat, defaultLng);
+                });
+            } else {
+                initMap(defaultLat, defaultLng);
+            }
+        });
+
+        function initMap(lat, lng) {
+            document.getElementById('loadingMsg').style.display = 'none';
+            var map = L.map('map').setView([lat, lng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+            // Update inputs on marker drag
+            marker.on('dragend', function (e) {
+                var position = marker.getLatLng();
+                updateInputs(position.lat, position.lng);
+            });
+
+            // Update marker on map click
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                updateInputs(e.latlng.lat, e.latlng.lng);
+            });
+
+            if (@(Model.Latitude.HasValue ? "false" : "true")) {
+                updateInputs(lat, lng);
+            }
+        }
+
+        function updateInputs(lat, lng) {
+            document.getElementById('lat').value = lat;
+            document.getElementById('lng').value = lng;
+            document.getElementById('displayLat').value = lat.toFixed(6);
+            document.getElementById('displayLng').value = lng.toFixed(6);
+        }
+    </script>
+}

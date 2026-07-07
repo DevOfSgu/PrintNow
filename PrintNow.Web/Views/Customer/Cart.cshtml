@@ -1,0 +1,117 @@
+@model IEnumerable<PrintNow.Web.Models.Order>
+@{
+    ViewData["Title"] = "Giỏ hàng của bạn";
+}
+
+<div style="background-color: #f5f5f5; min-height: 100vh; padding-top: 30px; padding-bottom: 50px;">
+    <div class="container">
+        <h3 class="fw-bold mb-4" style="color: var(--on-surface);">Giỏ hàng của bạn</h3>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                <div class="card-body p-5 text-center text-muted">
+                    <i class="bi bi-cart-x fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold">Giỏ hàng trống</h5>
+                    <p>Bạn chưa thêm bất kỳ tài liệu nào vào giỏ.</p>
+                    <a href="/Customer/Index" class="btn btn-primary px-4 mt-2">Khám phá tiệm in</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <!-- Danh sách giỏ hàng -->
+                <div class="col-lg-8">
+                    @foreach (var order in Model)
+                    {
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
+                            <!-- Header: Tên Tiệm -->
+                            <div class="card-header bg-white border-bottom p-3 d-flex align-items-center justify-content-between">
+                                <h6 class="fw-bold mb-0 text-primary">
+                                    <i class="bi bi-shop text-primary me-2"></i> @order.Shop.ShopName
+                                </h6>
+                                <span class="badge bg-light text-dark border">
+                                    @order.OrderDetails.Count tệp
+                                </span>
+                            </div>
+                            
+                            <!-- Body: Danh sách File -->
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var detail in order.OrderDetails)
+                                    {
+                                        <li class="list-group-item p-4">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="d-flex gap-3">
+                                                    <div class="text-danger" style="font-size: 32px; line-height: 1;">
+                                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="fw-bold mb-1">@detail.FileName</h6>
+                                                        <p class="text-muted mb-0" style="font-size: 13px;">
+                                                            Khổ: @detail.PaperSize &bull; 
+                                                            @(detail.IsColor ? "In màu" : "Trắng đen") &bull; 
+                                                            @detail.Sides mặt &bull; 
+                                                            Số lượng: x@(detail.Quantity)
+                                                        </p>
+                                                        @if (!string.IsNullOrEmpty(detail.AddOnList))
+                                                        {
+                                                            <div class="mt-2 text-muted fst-italic" style="font-size: 13px; background: #f9f9f9; padding: 5px 10px; border-radius: 4px; display: inline-block;">
+                                                                <i class="bi bi-chat-text me-1"></i> Ghi chú: @detail.AddOnList
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="text-end d-flex flex-column justify-content-between align-items-end" style="height: 100%;">
+                                                    <span class="fw-bold d-block text-danger mb-2">@detail.SubTotal.ToString("N0") đ</span>
+                                                    <form asp-action="RemoveFromCart" method="post" class="m-0 mt-auto">
+                                                        <input type="hidden" name="detailId" value="@detail.Id" />
+                                                        <button type="submit" class="btn btn-sm text-muted p-0 border-0 bg-transparent" title="Xóa tệp" onclick="return confirm('Bạn có chắc muốn xóa tệp này?')">
+                                                            <i class="bi bi-trash text-danger" style="font-size: 16px;"></i> Xóa
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                            
+                            <!-- Footer: Thanh toán cho Tiệm này -->
+                            <div class="card-footer bg-white border-top p-4 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-muted me-2">Tổng tiền:</span>
+                                    <span class="fs-5 fw-bold text-danger">@order.TotalAmount.ToString("N0") đ</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="/Customer/OrderConfig/@order.ShopId" class="btn btn-outline-danger fw-bold" style="border-radius: 8px;">Thêm file khác</a>
+                                    <a href="/Customer/Checkout?orderId=@order.Id" class="btn btn-danger fw-bold px-4" style="border-radius: 8px;">Thanh toán đơn này</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Cột phải: Quảng cáo hoặc Thông tin chung -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm" style="border-radius: 12px; position: sticky; top: 20px;">
+                        <div class="card-body p-4 text-center">
+                            <i class="bi bi-shield-check text-success" style="font-size: 40px;"></i>
+                            <h5 class="fw-bold mt-3">Thanh toán an toàn</h5>
+                            <p class="text-muted text-sm mb-0">Hệ thống của chúng tôi bảo vệ thông tin giao dịch của bạn. Đơn hàng sẽ được chuyển trực tiếp đến tiệm in ngay khi bạn bấm thanh toán.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

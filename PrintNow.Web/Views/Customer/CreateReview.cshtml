@@ -1,0 +1,201 @@
+@model PrintNow.Web.Models.Order
+@{
+    ViewData["Title"] = "Đánh giá đơn hàng";
+    Layout = "_CustomerLayout";
+}
+
+<style>
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .star-rating input {
+        display: none;
+    }
+    .star-rating label {
+        font-size: 28px;
+        color: #e2e8f0;
+        cursor: pointer;
+        transition: color 0.15s ease-in-out;
+    }
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #fbbf24;
+    }
+    
+    .rating-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .rating-row:last-child {
+        border-bottom: none;
+    }
+    .rating-label {
+        font-weight: 600;
+        color: #334155;
+    }
+    .rating-desc {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+    
+    .review-textarea {
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 14px;
+        resize: none;
+        width: 100%;
+        min-height: 120px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .review-textarea:focus {
+        border-color: var(--primary);
+    }
+</style>
+
+<div class="container py-5" style="max-width: 800px;">
+    <!-- Nút quay lại -->
+    <a href="/Customer/Orders" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-1 mb-4">
+        <i class="bi bi-arrow-left"></i> Trở lại chi tiết đơn hàng
+    </a>
+
+    <div class="mb-4">
+        <h3 class="fw-bold" style="color: #0f172a;">Đánh giá đơn hàng #PN-@Model.Id.ToString("D4")</h3>
+        <p class="text-muted" style="font-size: 14px;">Chia sẻ trải nghiệm của bạn để giúp chúng tôi cải thiện dịch vụ tốt hơn.</p>
+    </div>
+
+    <!-- Sản phẩm đã in -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+        <h6 class="fw-bold text-muted mb-3" style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Sản phẩm đã in</h6>
+        @foreach (var detail in Model.OrderDetails)
+        {
+            <div class="d-flex align-items-center gap-3 py-2 border-bottom last-border-none">
+                <div class="bg-light rounded p-2 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                    <i class="bi bi-file-earmark-pdf-fill text-danger fs-2"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <span class="fw-bold text-dark d-block" style="font-size: 14px;">@detail.FileName</span>
+                    <span class="text-muted small">Cấu hình: @detail.Quantity bản &bull; @detail.PaperSize &bull; @(detail.Sides == 2 ? "In 2 mặt" : "In 1 mặt")</span>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-success-subtle text-success" style="font-size: 11px;">Hoàn thành ngày @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Form Đánh giá -->
+    <form asp-action="CreateReview" method="post" id="reviewForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="orderId" value="@Model.Id" />
+        <input type="hidden" name="rating" id="calculatedRating" value="5" />
+        <input type="hidden" name="comment" id="assembledComment" value="" />
+
+        <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+            <!-- Chất lượng in ấn -->
+            <div class="rating-row">
+                <div>
+                    <div class="rating-label">Chất lượng in ấn</div>
+                    <div class="rating-desc">Độ sắc nét, màu sắc, chất liệu giấy</div>
+                </div>
+                <div class="star-rating" id="qualityStars">
+                    <input type="radio" name="quality" id="q5" value="5" checked /><label for="q5" class="bi bi-star-fill"></label>
+                    <input type="radio" name="quality" id="q4" value="4" /><label for="q4" class="bi bi-star-fill"></label>
+                    <input type="radio" name="quality" id="q3" value="3" /><label for="q3" class="bi bi-star-fill"></label>
+                    <input type="radio" name="quality" id="q2" value="2" /><label for="q2" class="bi bi-star-fill"></label>
+                    <input type="radio" name="quality" id="q1" value="1" /><label for="q1" class="bi bi-star-fill"></label>
+                </div>
+            </div>
+
+            <!-- Thời gian giao hàng -->
+            <div class="rating-row">
+                <div>
+                    <div class="rating-label">Thời gian giao hàng</div>
+                    <div class="rating-desc">Giao hàng đúng hẹn, đóng gói cẩn thận</div>
+                </div>
+                <div class="star-rating" id="deliveryStars">
+                    <input type="radio" name="delivery" id="d5" value="5" checked /><label for="d5" class="bi bi-star-fill"></label>
+                    <input type="radio" name="delivery" id="d4" value="4" /><label for="d4" class="bi bi-star-fill"></label>
+                    <input type="radio" name="delivery" id="d3" value="3" /><label for="d3" class="bi bi-star-fill"></label>
+                    <input type="radio" name="delivery" id="d2" value="2" /><label for="d2" class="bi bi-star-fill"></label>
+                    <input type="radio" name="delivery" id="d1" value="1" /><label for="d1" class="bi bi-star-fill"></label>
+                </div>
+            </div>
+
+            <!-- Dịch vụ khách hàng -->
+            <div class="rating-row">
+                <div>
+                    <div class="rating-label">Dịch vụ khách hàng</div>
+                    <div class="rating-desc">Hỗ trợ tư vấn, xử lý vấn đề</div>
+                </div>
+                <div class="star-rating" id="serviceStars">
+                    <input type="radio" name="service" id="s5" value="5" checked /><label for="s5" class="bi bi-star-fill"></label>
+                    <input type="radio" name="service" id="s4" value="4" /><label for="s4" class="bi bi-star-fill"></label>
+                    <input type="radio" name="service" id="s3" value="3" /><label for="s3" class="bi bi-star-fill"></label>
+                    <input type="radio" name="service" id="s2" value="2" /><label for="s2" class="bi bi-star-fill"></label>
+                    <input type="radio" name="service" id="s1" value="1" /><label for="s1" class="bi bi-star-fill"></label>
+                </div>
+            </div>
+
+            <!-- Bình luận chi tiết -->
+            <div class="mt-4">
+                <div class="rating-label mb-2">Bình luận chi tiết</div>
+                <textarea class="review-textarea" id="userComment" placeholder="Hãy chia sẻ thêm về trải nghiệm của bạn với sản phẩm này..."></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 align-items-center">
+            <a href="/Customer/Orders" class="btn btn-link text-decoration-none text-muted fw-semibold">Hủy bỏ</a>
+            <button type="submit" class="btn btn-danger px-4 py-2 fw-bold" style="border-radius: 8px;">
+                <i class="bi bi-send me-1"></i> Gửi đánh giá
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Xử lý logic tính điểm đánh giá trung bình & đóng gói comment
+        const form = document.getElementById("reviewForm");
+        const calcRatingInput = document.getElementById("calculatedRating");
+        const assembledCommentInput = document.getElementById("assembledComment");
+        const userCommentTextarea = document.getElementById("userComment");
+
+        form.addEventListener("submit", function (e) {
+            // Lấy điểm của từng tiêu chí
+            const qualityVal = parseInt(document.querySelector('input[name="quality"]:checked').value);
+            const deliveryVal = parseInt(document.querySelector('input[name="delivery"]:checked').value);
+            const serviceVal = parseInt(document.querySelector('input[name="service"]:checked').value);
+
+            // Tính trung bình cộng làm điểm chính
+            const averageRating = Math.max(1, Math.round((qualityVal + deliveryVal + serviceVal) / 3));
+            calcRatingInput.value = averageRating;
+
+            // Đóng gói comment chi tiết
+            const userComment = userCommentTextarea.value.trim();
+            const stars = "★";
+            const emptyStars = "☆";
+            
+            const qualityStars = stars.repeat(qualityVal) + emptyStars.repeat(5 - qualityVal);
+            const deliveryStars = stars.repeat(deliveryVal) + emptyStars.repeat(5 - deliveryVal);
+            const serviceStars = stars.repeat(serviceVal) + emptyStars.repeat(5 - serviceVal);
+
+            const detailHeader = `[Chất lượng: ${qualityStars} | Giao hàng: ${deliveryStars} | Dịch vụ: ${serviceStars}]`;
+            
+            if (userComment !== "") {
+                assembledCommentInput.value = `${detailHeader}\n${userComment}`;
+            } else {
+                assembledCommentInput.value = detailHeader;
+            }
+        });
+    </script>
+}

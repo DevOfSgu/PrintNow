@@ -1,0 +1,74 @@
+:root {
+  --primary: #D62839;
+  --primary-fixed: #ffdad8;
+  --on-primary-fixed-variant: #92001c;
+  --secondary-container: #F3F4F6;
+  --surface: #f9f9f9;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f3f3f3;
+  --on-surface: #1a1c1c;
+  --on-surface-variant: #5b403f;
+  --error: #ba1a1a;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--surface);
+  color: var(--on-surface);
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--primary-fixed);
+}
+
+.text-primary-brand {
+    color: var(--primary) !important;
+}
+
+.btn-primary-brand {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-primary-brand:hover {
+    background-color: var(--on-primary-fixed-variant);
+    color: white;
+}
+
+.btn-outline-primary-brand {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-outline-primary-brand:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}

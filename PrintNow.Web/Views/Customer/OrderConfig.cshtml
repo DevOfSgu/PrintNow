@@ -1,0 +1,392 @@
+@model PrintNow.Web.Models.Shop
+@{
+    ViewData["Title"] = "Cấu hình in";
+    var cartOrder = ViewBag.CartOrder as PrintNow.Web.Models.Order;
+}
+
+<div style="background-color: #f5f5f5; min-height: 100vh; padding-top: 30px; padding-bottom: 50px;">
+    <div class="container">
+        <!-- Nút quay lại -->
+        <a href="/Customer/Index" class="btn btn-danger mb-4 d-inline-block fw-bold" style="border-radius: 8px;">
+            <i class="bi bi-arrow-left me-1"></i> Về trang chủ
+        </a>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="row g-4">
+            <!-- Cột trái: Form cấu hình -->
+            <div class="col-lg-8">
+                <form asp-action="AddToCart" method="post" enctype="multipart/form-data" id="orderForm" onsubmit="return validateForm()">
+                    <input type="hidden" name="shopId" value="@Model.Id" />
+                    <input type="hidden" name="totalPages" id="totalPagesInput" value="1" />
+                    
+                    <!-- Tải tệp lên -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-muted mb-4 text-uppercase" style="letter-spacing: 1px; font-size: 13px;">Tải tệp lên</h6>
+                            <div class="border border-danger rounded d-flex flex-column align-items-center justify-content-center p-5" style="border-style: dashed !important; border-width: 2px !important; background-color: #fafafa; cursor: pointer;" onclick="document.getElementById('fileInput').click()">
+                                <h6 class="fw-bold text-danger mb-1">Kéo thả PDF/Word vào đây</h6>
+                                <small class="text-muted">Hỗ trợ tệp tối đa 50MB</small>
+                                <input type="file" id="fileInput" name="file" class="d-none" accept=".pdf,.doc,.docx" onchange="handleFileSelect(this)" />
+                            </div>
+                            <div id="fileInfo" class="mt-3 d-none p-3 rounded d-flex align-items-center gap-2" style="background-color: #F8D7DA; color: #842029;">
+                                <i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>
+                                <span id="fileName" class="fw-bold flex-grow-1 text-truncate"></span>
+                                <button type="button" class="btn btn-sm text-danger p-0 border-0 bg-transparent d-flex align-items-center justify-content-center" id="clearFileBtn" title="Bỏ chọn tệp" onclick="clearSelectedFile(event)">
+                                    <i class="bi bi-x-circle-fill fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cấu hình in -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-muted mb-4 text-uppercase" style="letter-spacing: 1px; font-size: 13px;">Cấu hình in</h6>
+                            
+                            <div class="mb-4">
+                                <label class="fw-bold mb-2 d-block">Khổ giấy</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="paperSize" id="sizeA3" value="A3">
+                                    <label class="btn btn-outline-danger py-2" for="sizeA3">A3</label>
+
+                                    <input type="radio" class="btn-check" name="paperSize" id="sizeA4" value="A4" checked>
+                                    <label class="btn btn-outline-danger py-2" for="sizeA4">A4</label>
+
+                                    <input type="radio" class="btn-check" name="paperSize" id="sizeA5" value="A5">
+                                    <label class="btn btn-outline-danger py-2" for="sizeA5">A5</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="fw-bold mb-2 d-block">Màu sắc</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="isColor" id="colorTrue" value="true" checked>
+                                    <label class="btn btn-outline-danger py-2" for="colorTrue">In màu</label>
+
+                                    <input type="radio" class="btn-check" name="isColor" id="colorFalse" value="false">
+                                    <label class="btn btn-outline-danger py-2" for="colorFalse">Đen trắng</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="fw-bold mb-2 d-block">Số mặt</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="sides" id="side1" value="1">
+                                    <label class="btn btn-outline-danger py-2" for="side1">1 mặt</label>
+
+                                    <input type="radio" class="btn-check" name="sides" id="side2" value="2" checked>
+                                    <label class="btn btn-outline-danger py-2" for="side2">2 mặt</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="fw-bold mb-2 d-block">Số lượng bản in</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="input-group" style="width: 150px;">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="updateQty(-1)">-</button>
+                                        <input type="number" class="form-control text-center" name="quantity" id="quantity" value="1" min="1">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="updateQty(1)">+</button>
+                                    </div>
+                                    <span class="text-muted">bản</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="fw-bold mb-2 d-block">Ghi chú thêm cho tiệm</label>
+                                <textarea class="form-control" name="note" rows="3" placeholder="Ví dụ: Đóng tập, bấm kim góc trái..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tiện ích gia công đi kèm -->
+                    @if (Model.Services.Any(s => s.Type == "AddOn" && s.IsActive))
+                    {
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold text-muted mb-4 text-uppercase" style="letter-spacing: 1px; font-size: 13px;">Tiện ích gia công đi kèm</h6>
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach (var addon in Model.Services.Where(s => s.Type == "AddOn" && s.IsActive))
+                                    {
+                                        <div class="form-check d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <input class="form-check-input addon-checkbox" type="checkbox" name="selectedAddons" id="addon-@addon.Id" value="@addon.Id" data-price="@addon.BasePrice" onchange="calculateLivePrice()">
+                                                <label class="form-check-label fw-bold ms-2" for="addon-@addon.Id" style="font-size: 14px; cursor: pointer;">
+                                                    @addon.ServiceName
+                                                </label>
+                                            </div>
+                                            <span class="fw-bold text-muted" style="font-size: 13.5px;">+@addon.BasePrice.ToString("N0") VNĐ / @addon.Unit</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Ước tính chi phí tệp tin -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-muted mb-3 text-uppercase" style="letter-spacing: 1px; font-size: 13px;">Ước tính chi phí tệp tin</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 13.5px;">
+                                <span class="text-muted">Đơn giá in cơ bản:</span>
+                                <span class="fw-bold text-dark" id="liveBasePrice">0 đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 13.5px;">
+                                <span class="text-muted">Hệ số mặt:</span>
+                                <span class="fw-bold text-dark" id="liveSidesMultiplier">x1.0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 13.5px;">
+                                <span class="text-muted">Số trang tệp tin:</span>
+                                <span class="fw-bold text-dark" id="livePagesCount">1 trang</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 13.5px;">
+                                <span class="text-muted">Phí gia công đi kèm:</span>
+                                <span class="fw-bold text-dark" id="liveAddonCost">+0 đ</span>
+                            </div>
+                            <hr class="my-2" />
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-dark" style="font-size: 14px;">Thành tiền tệp này:</span>
+                                <span class="fs-5 fw-bold text-danger" id="liveTotalPrice">0 đ</span>
+                            </div>
+                            <div class="alert alert-warning mt-3 mb-0 d-none animate__animated animate__fadeIn" id="serviceWarning" style="border-radius: 8px; font-size: 12.5px;">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Dịch vụ cấu hình in này hiện đang tạm dừng tại cửa hàng. Vui lòng chọn cấu hình khác.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-outline-danger w-100 py-3 fw-bold mb-3" style="border-radius: 8px;">
+                        <i class="bi bi-plus-circle me-2"></i> THÊM TỆP NÀY VÀO GIỎ
+                    </button>
+                </form>
+            </div>
+
+            <!-- Cột phải: Hóa đơn tổng hợp (Giỏ hàng) -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm" style="border-radius: 12px; position: sticky; top: 20px;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">Tóm tắt đơn hàng</h5>
+                        
+                        @if (cartOrder != null && cartOrder.OrderDetails.Any())
+                        {
+                            <ul class="list-group list-group-flush mb-4">
+                                @foreach (var item in cartOrder.OrderDetails)
+                                {
+                                    <li class="list-group-item px-0 py-3 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <span class="fw-bold text-truncate" style="max-width: 180px;">
+                                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i> @item.FileName
+                                            </span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-bold text-danger">@item.SubTotal.ToString("N0")đ</span>
+                                                <form asp-action="RemoveFromCart" method="post" class="m-0">
+                                                    <input type="hidden" name="detailId" value="@item.Id" />
+                                                    <input type="hidden" name="returnUrl" value="/Customer/OrderConfig/@Model.Id" />
+                                                    <button type="submit" class="btn btn-sm text-muted p-0 border-0 bg-transparent" title="Xóa tệp" onclick="return confirm('Bạn có chắc muốn xóa tệp này?')">
+                                                        <i class="bi bi-x-circle-fill" style="font-size: 16px;"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted" style="font-size: 12px;">
+                                            Khổ @item.PaperSize &bull; @(item.IsColor ? "In màu" : "Đen trắng") &bull; @item.Sides mặt &bull; SL: @item.Quantity
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="fw-bold mb-0">Tổng cộng</h6>
+                                <h4 class="fw-bold text-danger mb-0">@cartOrder.TotalAmount.ToString("N0") đ</h4>
+                            </div>
+
+                            <a href="/Customer/Checkout?orderId=@cartOrder.Id" class="btn btn-danger w-100 py-3 fw-bold mb-3" style="border-radius: 8px;">
+                                THANH TOÁN NGAY
+                            </a>
+                            <p class="text-center text-muted" style="font-size: 12px;">Giá đã bao gồm thuế VAT</p>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
+                                <p class="mb-0">Chưa có tệp nào được thêm vào giỏ.</p>
+                                <p style="font-size: 13px;">Hãy cấu hình và thêm tệp ở bên trái.</p>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Danh sách dịch vụ in ấn tài liệu cơ bản được nạp động từ database
+        const services = {
+            "A4_BW": {
+                active: @(Model.Services.Any(s => s.ServiceCode == "A4_BW" && s.IsActive) ? "true" : "false"),
+                price: @(Model.Services.FirstOrDefault(s => s.ServiceCode == "A4_BW")?.BasePrice ?? 500)
+            },
+            "A4_COLOR": {
+                active: @(Model.Services.Any(s => s.ServiceCode == "A4_COLOR" && s.IsActive) ? "true" : "false"),
+                price: @(Model.Services.FirstOrDefault(s => s.ServiceCode == "A4_COLOR")?.BasePrice ?? 1500)
+            },
+            "A3_BW": {
+                active: @(Model.Services.Any(s => s.ServiceCode == "A3_BW" && s.IsActive) ? "true" : "false"),
+                price: @(Model.Services.FirstOrDefault(s => s.ServiceCode == "A3_BW")?.BasePrice ?? 1000)
+            },
+            "A3_COLOR": {
+                active: @(Model.Services.Any(s => s.ServiceCode == "A3_COLOR" && s.IsActive) ? "true" : "false"),
+                price: @(Model.Services.FirstOrDefault(s => s.ServiceCode == "A3_COLOR")?.BasePrice ?? 3000)
+            },
+            "A5_BW": {
+                active: @(Model.Services.Any(s => s.ServiceCode == "A5_BW" && s.IsActive) ? "true" : "false"),
+                price: @(Model.Services.FirstOrDefault(s => s.ServiceCode == "A5_BW")?.BasePrice ?? 400)
+            },
+            "A5_COLOR": {
+                active: @(Model.Services.Any(s => s.ServiceCode == "A5_COLOR" && s.IsActive) ? "true" : "false"),
+                price: @(Model.Services.FirstOrDefault(s => s.ServiceCode == "A5_COLOR")?.BasePrice ?? 1200)
+            }
+        };
+
+        var documentPages = 1;
+
+        function calculateLivePrice() {
+            var paperSize = document.querySelector('input[name="paperSize"]:checked').value;
+            var isColor = document.querySelector('input[name="isColor"]:checked').value === "true";
+            var sides = parseInt(document.querySelector('input[name="sides"]:checked').value);
+            var qty = parseInt(document.getElementById('quantity').value) || 1;
+
+            var serviceKey = paperSize + "_" + (isColor ? "COLOR" : "BW");
+            var service = services[serviceKey];
+
+            var submitBtn = document.querySelector('button[type="submit"]');
+            var warningEl = document.getElementById('serviceWarning');
+
+            if (!service || !service.active) {
+                // Nếu dịch vụ này bị tắt, khóa nút và hiện cảnh báo
+                document.getElementById('liveBasePrice').innerText = "Tạm ngưng";
+                document.getElementById('liveSidesMultiplier').innerText = "-";
+                document.getElementById('livePagesCount').innerText = "-";
+                document.getElementById('liveAddonCost').innerText = "-";
+                document.getElementById('liveTotalPrice').innerText = "Không hỗ trợ";
+                if (submitBtn) submitBtn.disabled = true;
+                if (warningEl) warningEl.classList.remove('d-none');
+                return;
+            } else {
+                if (submitBtn) submitBtn.disabled = false;
+                if (warningEl) warningEl.classList.add('d-none');
+            }
+
+            var basePrice = service.price;
+            var sideMultiplier = sides === 2 ? 1.5 : 1.0;
+            var printCost = basePrice * sideMultiplier * documentPages * qty;
+
+            // Tính tiền tiện ích gia công thêm
+            var addonCost = 0;
+            var checkboxes = document.querySelectorAll('.addon-checkbox:checked');
+            checkboxes.forEach(function(cb) {
+                var addonPrice = parseFloat(cb.getAttribute('data-price')) || 0;
+                addonCost += addonPrice * qty; // Nhân theo số lượng bản in
+            });
+
+            var totalCost = printCost + addonCost;
+
+            // Hiển thị ra giao diện
+            document.getElementById('liveBasePrice').innerText = basePrice.toLocaleString('vi-VN') + " đ";
+            document.getElementById('liveSidesMultiplier').innerText = "x" + sideMultiplier.toFixed(1);
+            document.getElementById('livePagesCount').innerText = documentPages + " trang";
+            document.getElementById('liveAddonCost').innerText = "+" + addonCost.toLocaleString('vi-VN') + " đ";
+            document.getElementById('liveTotalPrice').innerText = totalCost.toLocaleString('vi-VN') + " đ";
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lắng nghe sự thay đổi của cấu hình để cập nhật giá trực tiếp
+            document.querySelectorAll('input[name="paperSize"], input[name="isColor"], input[name="sides"]').forEach(function(el) {
+                el.addEventListener('change', calculateLivePrice);
+            });
+            document.getElementById('quantity').addEventListener('input', calculateLivePrice);
+            
+            // Chạy tính toán lần đầu
+            calculateLivePrice();
+        });
+
+        function validateForm() {
+            var fileInput = document.getElementById('fileInput');
+            if (!fileInput.value) {
+                alert("Vui lòng click hoặc kéo thả để tải lên một tệp (PDF/Word) trước khi thêm vào giỏ!");
+                return false;
+            }
+            return true;
+        }
+
+        function handleFileSelect(input) {
+            var file = input.files[0];
+            if (file) {
+                document.getElementById('fileName').innerText = file.name + " (Đang đếm số trang...)";
+                document.getElementById('fileInfo').classList.remove('d-none');
+
+                var formData = new FormData();
+                formData.append("file", file);
+
+                fetch('/Customer/ParsePageCount', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        documentPages = data.pageCount;
+                        document.getElementById('totalPagesInput').value = documentPages;
+                        document.getElementById('fileName').innerText = file.name + " (" + documentPages + " trang)";
+                    } else {
+                        documentPages = 1;
+                        document.getElementById('totalPagesInput').value = 1;
+                        document.getElementById('fileName').innerText = file.name + " (1 trang)";
+                    }
+                    calculateLivePrice();
+                })
+                .catch(error => {
+                    console.error("Error parsing page count:", error);
+                    documentPages = 1;
+                    document.getElementById('totalPagesInput').value = 1;
+                    document.getElementById('fileName').innerText = file.name + " (1 trang)";
+                    calculateLivePrice();
+                });
+            }
+        }
+
+        function clearSelectedFile(event) {
+            if (event) event.stopPropagation();
+            var fileInput = document.getElementById('fileInput');
+            fileInput.value = "";
+            
+            var fileInfo = document.getElementById('fileInfo');
+            fileInfo.classList.add('d-none');
+            
+            var fileName = document.getElementById('fileName');
+            fileName.innerText = "";
+
+            documentPages = 1;
+            document.getElementById('totalPagesInput').value = 1;
+            calculateLivePrice();
+        }
+
+        function updateQty(change) {
+            var input = document.getElementById('quantity');
+            var val = parseInt(input.value) + change;
+            if (val >= 1) {
+                input.value = val;
+                calculateLivePrice();
+            }
+        }
+    </script>
+}

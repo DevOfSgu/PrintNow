@@ -1,0 +1,98 @@
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<!-- Hero Section -->
+<div style="background-color: var(--secondary-container); padding: 80px 0; border-radius: 0 0 32px 32px;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 pe-5">
+                <h1 style="font-size: 48px; font-weight: 800; color: var(--on-surface); line-height: 1.2;">
+                    Kết nối tiệm in,<br />
+                    <span style="color: var(--primary);">Nhanh chóng tức thì</span>
+                </h1>
+                <p class="mt-4 mb-5" style="font-size: 18px; color: var(--on-surface-variant); line-height: 1.6;">
+                    Kết nối bạn với mạng lưới các tiệm in chuyên nghiệp gần nhất. Tải file, chọn cửa hàng và nhận sản phẩm chỉ trong vài giờ.
+                </p>
+                <a asp-controller="Auth" asp-action="Login" class="btn btn-primary-brand btn-lg d-inline-flex align-items-center" style="padding: 16px 32px;">
+                    <img src="~/icons/near.svg" alt="" width="24" height="24" class="me-2" /> Tìm tiệm in gần bạn
+                </a>
+            </div>
+            <div class="col-md-6 text-center mt-5 mt-md-0">
+                <!-- SVG Illustration Placeholder -->
+                <div style="background-color: white; border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: inline-block;">
+                    <svg width="300" height="200" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="75" y="40" width="150" height="180" rx="8" fill="#F3F4F6" stroke="#D62839" stroke-width="4"/>
+                        <path d="M100 80h100M100 110h100M100 140h60" stroke="#D62839" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M150 20c-15 0-25 10-25 25 0 20 25 45 25 45s25-25 25-45c0-15-10-25-25-25z" fill="#D62839"/>
+                        <circle cx="150" cy="45" r="8" fill="#FFF"/>
+                        <circle cx="60" cy="150" r="20" fill="#D1D5DB"/>
+                        <rect x="230" y="60" width="20" height="20" fill="#D62839"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div style="background-color: #ffffff;">
+    <div class="container" style="padding: 100px 0;">
+        <div class="text-center mb-5">
+        <h2 style="font-size: 32px; font-weight: 700; color: var(--on-surface);">Trải nghiệm in ấn hiện đại</h2>
+        <p style="color: var(--on-surface-variant); margin-top: 12px;">Quy trình tối ưu giúp bạn tiết kiệm thời gian và chi phí tối đa.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 p-4" style="border: 1px solid #E5E5E5; border-radius: 16px; box-shadow: none;">
+                <div style="width: 48px; height: 48px; background-color: var(--secondary-container); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                    <img src="~/icons/upload_file.svg" alt="Upload" width="24" height="24" />
+                </div>
+                <h4 style="font-weight: 700; font-size: 20px; margin-bottom: 16px;">Tải file dễ dàng</h4>
+                <p style="color: var(--on-surface-variant); font-size: 15px; line-height: 1.6; margin: 0;">
+                    Kéo thả tài liệu của bạn trực tiếp vào trình duyệt. Hỗ trợ đa dạng định dạng PDF, DOCX, và hình ảnh chất lượng cao.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4" style="border: 1px solid #E5E5E5; border-radius: 16px; box-shadow: none;">
+                <div style="width: 48px; height: 48px; background-color: var(--secondary-container); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                    <img src="~/icons/compare_money.svg" alt="Compare" width="24" height="24" />
+                </div>
+                <h4 style="font-weight: 700; font-size: 20px; margin-bottom: 16px;">So sánh giá cả</h4>
+                <p style="color: var(--on-surface-variant); font-size: 15px; line-height: 1.6; margin: 0;">
+                    Tìm mức giá tốt nhất từ danh sách các cửa hàng uy tín xung quanh. Minh bạch, không chi phí ẩn, thanh toán dễ dàng.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4" style="border: 1px solid #E5E5E5; border-radius: 16px; box-shadow: none;">
+                <div style="width: 48px; height: 48px; background-color: var(--secondary-container); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px;">
+                    <img src="~/icons/timer.svg" alt="Timer" width="24" height="24" />
+                </div>
+                <h4 style="font-weight: 700; font-size: 20px; margin-bottom: 16px;">Lấy ngay trong ngày</h4>
+                <p style="color: var(--on-surface-variant); font-size: 15px; line-height: 1.6; margin: 0;">
+                    Tiết kiệm thời gian với dịch vụ lấy hàng nhanh hoặc giao hàng tận nơi siêu tốc trong khu vực nội thành.
+                </p>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Partner Section -->
+<div style="background-color: var(--surface-container); padding: 100px 0;">
+    <div class="container">
+        <div class="card border-0 text-center" style="border-radius: 24px; padding: 60px 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); max-width: 800px; margin: 0 auto;">
+            <p style="color: var(--primary); font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;">Dành cho đối tác</p>
+            <h2 style="font-size: 36px; font-weight: 800; color: var(--on-surface); margin: 16px 0 24px;">Bạn sở hữu tiệm in?</h2>
+            <p style="color: var(--on-surface-variant); font-size: 16px; line-height: 1.6; max-width: 600px; margin: 0 auto 40px;">
+                Tham gia cùng PrintNow để tiếp cận hàng ngàn khách hàng mới mỗi ngày. Tăng doanh thu và quản lý đơn hàng chuyên nghiệp hơn với nền tảng của chúng tôi.
+            </p>
+            <a asp-controller="Auth" asp-action="Register" asp-route-role="ShopOwner" class="btn btn-outline-primary-brand btn-lg" style="padding: 14px 40px;">
+                Trở thành đối tác ngay
+            </a>
+        </div>
+    </div>
+</div>

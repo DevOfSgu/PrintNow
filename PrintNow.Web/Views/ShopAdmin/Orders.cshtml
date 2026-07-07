@@ -1,0 +1,556 @@
+@model IEnumerable<PrintNow.Web.Models.Order>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng";
+    Layout = "_ShopAdminLayout";
+
+    // Phân nhóm đơn hàng theo trạng thái
+    var pendingOrders = Model.Where(o => o.Status == "Pending").ToList();
+    var printingOrders = Model.Where(o => o.Status == "Printing").ToList();
+    var readyOrders = Model.Where(o => o.Status == "Ready").ToList();
+    var completedOrders = Model.Where(o => o.Status == "Completed").ToList();
+    var cancelledOrders = Model.Where(o => o.Status == "Cancelled").ToList();
+}
+
+<style>
+    /* Trạng thái online với hiệu ứng thở */
+    .status-badge {
+        background-color: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulse 1.6s infinite;
+    }
+    @@keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
+    /* Bố cục Kanban chống vỡ layout */
+    .kanban-board {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding-bottom: 24px;
+        align-items: flex-start;
+        scrollbar-width: thin;
+    }
+    .kanban-column {
+        flex: 1;
+        min-width: 310px;
+        max-width: 360px;
+        background-color: #f8f9fa;
+        border-radius: 16px;
+        border: 1px solid #e9ecef;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 160px);
+    }
+    .kanban-column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding: 0 4px;
+    }
+    .column-title {
+        font-weight: 700;
+        font-size: 15px;
+        color: #1e293b;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .column-count {
+        background-color: #e2e8f0;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    /* Thẻ Kanban */
+    .kanban-cards-container {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        overflow-y: auto;
+        flex-grow: 1;
+        min-height: 300px;
+        padding: 2px;
+        scrollbar-width: thin;
+    }
+    .order-card {
+        background-color: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 16px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+        border-color: var(--primary);
+    }
+    
+    /* Thiết kế chi tiết thẻ */
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed #f1f5f9;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+    .order-id {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 14px;
+    }
+    .order-time {
+        font-size: 12px;
+        color: #64748b;
+    }
+    .customer-name {
+        font-weight: 600;
+        color: #334155;
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+    .file-item {
+        background-color: #f8fafc;
+        border: 1px solid #f1f5f9;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        font-size: 12.5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .file-name-text {
+        font-weight: 500;
+        color: #334155;
+        max-width: 180px;
+    }
+    .file-meta {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+    .order-price {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 15px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold m-0" style="color: #0f172a;">Quản lý Đơn hàng</h3>
+        <p class="text-muted small m-0 mt-1">Theo dõi, in ấn và điều phối đơn hàng nhanh chóng.</p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="status-badge">
+            <span class="pulse-dot"></span>
+            Online - Nhận đơn Realtime
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius: 10px;">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-alert="close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="kanban-board">
+    <!-- CỘT 1: CHỜ XÁC NHẬN -->
+    <div class="kanban-column">
+        <div class="kanban-column-header">
+            <h6 class="column-title">Chờ xác nhận</h6>
+            <span class="column-count">@pendingOrders.Count</span>
+        </div>
+        <div class="kanban-cards-container">
+            @foreach (var order in pendingOrders)
+            {
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">#ORD-@order.Id</span>
+                        <span class="order-time"><i class="bi bi-clock me-1"></i>@order.CreatedAt.ToLocalTime().ToString("HH:mm")</span>
+                    </div>
+                    <div class="customer-name">@order.Customer.FullName</div>
+                    @if (order.DeliveryMethod == "Delivery")
+                    {
+                        <div class="mb-2 text-danger" style="font-size: 12px; font-weight: 500;">
+                            <i class="bi bi-truck me-1"></i> Giao hàng: @order.ShippingAddress
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-2 text-muted" style="font-size: 12px;">
+                            <i class="bi bi-shop me-1"></i> Nhận tại cửa hàng
+                        </div>
+                    }
+                    
+                    <div class="mb-3">
+                        @foreach (var detail in order.OrderDetails)
+                        {
+                            <div class="file-item">
+                                <div>
+                                    <div class="file-name-text text-truncate">@detail.FileName</div>
+                                    <div class="file-meta">
+                                        @detail.PaperSize &bull; @(detail.IsColor ? "In màu" : "Trắng đen") &bull; @detail.Sides mặt &bull; x@(detail.Quantity)
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(detail.AddOnList))
+                                    {
+                                        <div class="text-muted fst-italic mt-1" style="font-size: 11px;">
+                                            <i class="bi bi-chat-text me-1"></i> @detail.AddOnList
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-end pt-2 border-top">
+                        <div>
+                            <span class="order-price">@order.TotalAmount.ToString("N0")đ</span>
+                            @if (order.ShippingFee > 0)
+                            {
+                                <div class="text-muted" style="font-size: 11px;">(gồm @order.ShippingFee.ToString("N0")đ ship)</div>
+                            }
+                            <div style="font-size: 11px;" class="@(order.PaymentStatus == "Paid" ? "text-success" : "text-warning") fw-bold">
+                                @(order.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")
+                            </div>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <!-- Nút hủy đơn -->
+                            <form id="cancel-form-@order.Id" asp-action="CancelOrder" method="post" class="m-0 d-inline">
+                                <input type="hidden" name="id" value="@order.Id" />
+                                <input type="hidden" name="cancelReason" value="" />
+                                <button type="button" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;" onclick="cancelOrderPrompt(event, @order.Id)">
+                                    Hủy
+                                </button>
+                            </form>
+                            <!-- Nút nhận đơn -->
+                            <form asp-action="AcceptOrder" method="post" class="m-0 d-inline">
+                                <input type="hidden" name="id" value="@order.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger fw-bold" style="border-radius: 8px;">
+                                    Nhận đơn
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (!pendingOrders.Any())
+            {
+                <div class="text-center text-muted py-5" style="font-size: 13px;">Không có đơn hàng chờ</div>
+            }
+        </div>
+    </div>
+
+    <!-- CỘT 2: ĐANG IN -->
+    <div class="kanban-column">
+        <div class="kanban-column-header">
+            <h6 class="column-title">Đang in</h6>
+            <span class="column-count">@printingOrders.Count</span>
+        </div>
+        <div class="kanban-cards-container">
+            @foreach (var order in printingOrders)
+            {
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">#ORD-@order.Id</span>
+                        <span class="order-time"><i class="bi bi-clock me-1"></i>@order.CreatedAt.ToLocalTime().ToString("HH:mm")</span>
+                    </div>
+                    <div class="customer-name">@order.Customer.FullName</div>
+                    @if (order.DeliveryMethod == "Delivery")
+                    {
+                        <div class="mb-2 text-danger" style="font-size: 12px; font-weight: 500;">
+                            <i class="bi bi-truck me-1"></i> Giao hàng: @order.ShippingAddress
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-2 text-muted" style="font-size: 12px;">
+                            <i class="bi bi-shop me-1"></i> Nhận tại cửa hàng
+                        </div>
+                    }
+                    
+                    <div class="mb-3">
+                        @foreach (var detail in order.OrderDetails)
+                        {
+                            <div class="file-item">
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="file-name-text text-truncate">@detail.FileName</div>
+                                    <div class="file-meta">
+                                        @detail.PaperSize &bull; @(detail.IsColor ? "In màu" : "Trắng đen") &bull; @detail.Sides mặt &bull; x@(detail.Quantity)
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(detail.AddOnList))
+                                    {
+                                        <div class="text-muted fst-italic mt-1" style="font-size: 11px;">
+                                            <i class="bi bi-chat-text me-1"></i> @detail.AddOnList
+                                        </div>
+                                    }
+                                </div>
+                                <a href="@detail.FileUrl" target="_blank" class="btn btn-sm btn-light border p-2 ms-2 flex-shrink-0" style="border-radius: 8px;" title="Tải File PDF">
+                                    <i class="bi bi-download text-danger"></i>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-end pt-2 border-top">
+                        <div>
+                            <span class="order-price">@order.TotalAmount.ToString("N0")đ</span>
+                            @if (order.ShippingFee > 0)
+                            {
+                                <div class="text-muted" style="font-size: 11px;">(gồm @order.ShippingFee.ToString("N0")đ ship)</div>
+                            }
+                            <div style="font-size: 11px;" class="@(order.PaymentStatus == "Paid" ? "text-success" : "text-warning") fw-bold">
+                                @(order.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")
+                            </div>
+                        </div>
+                        <div class="d-flex gap-1 align-items-center">
+                            <!-- Nút chat -->
+                            <a href="/ShopAdmin/Messages?customerId=@order.CustomerId" class="btn btn-sm btn-light border p-2" style="border-radius: 8px;" title="Nhắn tin cho khách hàng">
+                                <i class="bi bi-chat-dots"></i>
+                            </a>
+                            <!-- Nút hoàn thành in -->
+                            <form asp-action="CompletePrinting" method="post" class="m-0">
+                                <input type="hidden" name="id" value="@order.Id" />
+                                <button type="submit" class="btn btn-sm btn-success" style="border-radius: 8px;" title="Hoàn thành in">
+                                    <i class="bi bi-check2-circle me-1"></i> Xong
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (!printingOrders.Any())
+            {
+                <div class="text-center text-muted py-5" style="font-size: 13px;">Không có đơn đang in</div>
+            }
+        </div>
+    </div>
+
+    <!-- CỘT 3: CHỜ LẤY -->
+    <div class="kanban-column">
+        <div class="kanban-column-header">
+            <h6 class="column-title">Chờ lấy</h6>
+            <span class="column-count">@readyOrders.Count</span>
+        </div>
+        <div class="kanban-cards-container">
+            @foreach (var order in readyOrders)
+            {
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">#ORD-@order.Id</span>
+                        <span class="order-time"><i class="bi bi-clock me-1"></i>@order.CreatedAt.ToLocalTime().ToString("HH:mm")</span>
+                    </div>
+                    <div class="customer-name">@order.Customer.FullName</div>
+                    @if (order.DeliveryMethod == "Delivery")
+                    {
+                        <div class="mb-2 text-danger" style="font-size: 12px; font-weight: 500;">
+                            <i class="bi bi-truck me-1"></i> Giao hàng: @order.ShippingAddress
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-2 text-muted" style="font-size: 12px;">
+                            <i class="bi bi-shop me-1"></i> Nhận tại cửa hàng
+                        </div>
+                    }
+                    
+                    <div class="mb-3">
+                        @foreach (var detail in order.OrderDetails)
+                        {
+                            <div class="file-item">
+                                <div>
+                                    <div class="file-name-text text-truncate">@detail.FileName</div>
+                                    <div class="file-meta">
+                                        @detail.PaperSize &bull; @(detail.IsColor ? "In màu" : "Trắng đen") &bull; @detail.Sides mặt &bull; x@(detail.Quantity)
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-end pt-2 border-top">
+                        <div>
+                            <span class="order-price">@order.TotalAmount.ToString("N0")đ</span>
+                            @if (order.ShippingFee > 0)
+                            {
+                                <div class="text-muted" style="font-size: 11px;">(gồm @order.ShippingFee.ToString("N0")đ ship)</div>
+                            }
+                            <div style="font-size: 11px;" class="@(order.PaymentStatus == "Paid" ? "text-success" : "text-warning") fw-bold">
+                                @(order.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")
+                            </div>
+                        </div>
+                        <form asp-action="CompleteOrder" method="post" class="m-0">
+                            <input type="hidden" name="id" value="@order.Id" />
+                            <button type="submit" class="btn btn-sm btn-success fw-bold px-3" style="border-radius: 8px;">
+                                Đã giao & Nhận tiền
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+            @if (!readyOrders.Any())
+            {
+                <div class="text-center text-muted py-5" style="font-size: 13px;">Không có đơn chờ khách lấy</div>
+            }
+        </div>
+    </div>
+
+    <!-- CỘT 4: HOÀN THÀNH -->
+    <div class="kanban-column">
+        <div class="kanban-column-header">
+            <h6 class="column-title">Hoàn thành</h6>
+            <span class="column-count">@completedOrders.Count</span>
+        </div>
+        <div class="kanban-cards-container">
+            @foreach (var order in completedOrders)
+            {
+                <div class="order-card opacity-75">
+                    <div class="order-header">
+                        <span class="order-id text-muted">#ORD-@order.Id</span>
+                        <span class="order-time"><i class="bi bi-check2 text-success me-1"></i>Hoàn thành</span>
+                    </div>
+                    <div class="customer-name text-muted">@order.Customer.FullName</div>
+                    @if (order.DeliveryMethod == "Delivery")
+                    {
+                        <div class="mb-2 text-danger" style="font-size: 12px; font-weight: 500; opacity: 0.8;">
+                            <i class="bi bi-truck me-1"></i> Giao hàng: @order.ShippingAddress
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-2 text-muted" style="font-size: 12px; opacity: 0.8;">
+                            <i class="bi bi-shop me-1"></i> Nhận tại cửa hàng
+                        </div>
+                    }
+                    
+                    <div class="mb-2">
+                        @foreach (var detail in order.OrderDetails)
+                        {
+                            <div class="file-item" style="opacity: 0.8;">
+                                <div class="file-name-text text-truncate text-muted">@detail.FileName</div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="order-price text-muted">@order.TotalAmount.ToString("N0")đ</span>
+                        @if (order.ShippingFee > 0)
+                        {
+                            <span class="text-muted" style="font-size: 11px;">(gồm @order.ShippingFee.ToString("N0")đ ship)</span>
+                        }
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 11px;">Đã giao thành công</span>
+                    </div>
+                </div>
+            }
+            @if (!completedOrders.Any())
+            {
+                <div class="text-center text-muted py-5" style="font-size: 13px;">Chưa có đơn hoàn thành</div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="text-end mt-2">
+    <a href="#" class="text-decoration-none text-muted small fw-bold" data-bs-toggle="modal" data-bs-target="#cancelledOrdersModal">
+        <i class="bi bi-trash3 me-1"></i> Xem các đơn đã hủy
+    </a>
+</div>
+
+<!-- Modal xem các đơn đã hủy -->
+<div class="modal fade" id="cancelledOrdersModal" tabindex="-1" aria-labelledby="cancelledOrdersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="cancelledOrdersModalLabel">Đơn hàng đã hủy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th class="border-0 rounded-start">Mã ĐH</th>
+                                <th class="border-0">Khách hàng</th>
+                                <th class="border-0">Lý do hủy</th>
+                                <th class="border-0">Ngày đặt</th>
+                                <th class="border-0 rounded-end">Tổng tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (cancelledOrders.Any())
+                            {
+                                foreach (var order in cancelledOrders)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">#ORD-@order.Id</td>
+                                        <td>@order.Customer.FullName</td>
+                                        <td class="text-danger fst-italic">@order.CancelReason</td>
+                                        <td>@order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="fw-bold">@order.TotalAmount.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">Chưa có đơn hàng nào bị hủy.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function cancelOrderPrompt(e, orderId) {
+        e.preventDefault();
+        var reason = prompt("Vui lòng nhập lý do hủy đơn hàng:");
+        if (reason === null) return; // Nhấn Cancel
+        
+        var form = document.getElementById('cancel-form-' + orderId);
+        form.querySelector('input[name="cancelReason"]').value = reason;
+        form.submit();
+    }
+</script>

@@ -1,0 +1,381 @@
+@model List<PrintNow.Web.Models.Service>
+@{
+    ViewData["Title"] = "Quản Lý Dịch Vụ & Bảng Giá";
+    Layout = "_ShopAdminLayout";
+    var coreServices = Model.Where(s => s.Type == "Core").OrderBy(s => s.ServiceCode).ToList();
+    var addonServices = Model.Where(s => s.Type == "AddOn").ToList();
+}
+
+<style>
+    .section-title {
+        font-size: 19px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 20px;
+    }
+    
+    .price-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .price-input {
+        width: 100px;
+        text-align: right;
+        padding: 6px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 600;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .price-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+    .price-unit {
+        font-size: 13px;
+        color: #64748b;
+    }
+    
+    /* Toggle switch styling */
+    .switch-custom {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+    .switch-custom input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider-custom {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 24px;
+    }
+    .slider-custom:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+    input:checked + .slider-custom {
+        background-color: var(--primary);
+    }
+    input:checked + .slider-custom:before {
+        transform: translateX(20px);
+    }
+    
+    .service-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.2s;
+    }
+    .service-row:hover {
+        background-color: #fafafa;
+    }
+    .service-row:last-child {
+        border-bottom: none;
+    }
+    .service-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #334155;
+    }
+    
+    .btn-add-addon {
+        background-color: var(--primary);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        border-radius: 8px;
+        padding: 8px 16px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.2s;
+    }
+    .btn-add-addon:hover {
+        background-color: #b91c1c;
+    }
+
+    .table-custom th {
+        font-weight: 600;
+        color: #64748b;
+        font-size: 12.5px;
+        text-transform: uppercase;
+        border-bottom: 2px solid #f1f5f9;
+        padding: 14px 20px;
+    }
+    .table-custom td {
+        padding: 16px 20px;
+        vertical-align: middle;
+        font-size: 13.5px;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <div class="mb-4">
+        <h3 class="fw-bold" style="color: #0f172a; font-size: 24px;">Quản Lý Dịch Vụ & Bảng Giá</h3>
+        <p class="text-muted small" style="font-size: 13.5px;">Cấu hình đơn giá in ấn tài liệu và các tiện ích gia công đi kèm của tiệm.</p>
+    </div>
+
+    <!-- Alert Success -->
+    <div id="ajaxAlert" class="alert alert-success d-none mb-4" role="alert" style="border-radius: 12px; font-size: 13.5px;">
+        <i class="bi bi-check-circle-fill me-2"></i> <span id="ajaxAlertMsg">Lưu thay đổi thành công!</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- 1. BẢNG GIÁ IN TÀI LIỆU CƠ BẢN -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h5 class="section-title">1. Bảng giá in tài liệu cơ bản</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="d-flex flex-column">
+                        @foreach (var s in coreServices)
+                        {
+                            <div class="service-row">
+                                <span class="service-name">@s.ServiceName</span>
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="price-input-wrapper">
+                                        <input type="number" class="price-input" value="@s.BasePrice.ToString("0")" data-service-id="@s.Id" onblur="savePrice(this)" />
+                                        <span class="price-unit">VNĐ/@s.Unit</span>
+                                    </div>
+                                    <label class="switch-custom">
+                                        <input type="checkbox" @(s.IsActive ? "checked" : "") onchange="toggleStatus(this, @s.Id)" />
+                                        <span class="slider-custom"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TIỆN ÍCH GIA CÔNG ĐI KÈM -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="section-title mb-0">2. Tiện ích gia công đi kèm</h5>
+                    <button class="btn-add-addon" data-bs-toggle="modal" data-bs-target="#addAddonModal">
+                        <i class="bi bi-plus-lg"></i> Thêm tiện ích mới
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tên tiện ích</th>
+                                    <th>Đơn giá</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="addonTableBody">
+                                @if (addonServices.Any())
+                                {
+                                    foreach (var s in addonServices)
+                                    {
+                                        <tr id="addon-row-@s.Id">
+                                            <td class="fw-semibold">@s.ServiceName</td>
+                                            <td>@s.BasePrice.ToString("N0") VNĐ / @s.Unit</td>
+                                            <td class="text-end text-muted fs-5">
+                                                <i class="bi bi-trash cursor-pointer hover-text-danger ms-3" title="Xóa" onclick="deleteAddon(@s.Id)"></i>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr id="noAddonRow">
+                                        <td colspan="3" class="text-center py-4 text-muted">
+                                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                            Chưa có dịch vụ gia công đi kèm nào.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm tiện ích mới -->
+<div class="modal fade" id="addAddonModal" tabindex="-1" aria-labelledby="addAddonModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none; overflow: hidden;">
+            <div class="modal-header bg-light border-0 py-3">
+                <h5 class="modal-title fw-bold" id="addAddonModalLabel" style="font-size: 16px; color: #0f172a;">Thêm tiện ích gia công</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="addonForm">
+                    <div class="mb-3">
+                        <label for="addonName" class="form-label fw-bold" style="font-size: 13px;">Tên tiện ích <span class="text-danger">*</span></label>
+                        <input type="text" id="addonName" class="form-control" placeholder="Ví dụ: Ép nhựa (Plastic), Đóng gáy xoắn..." style="border-radius: 8px;" required />
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-7">
+                            <label for="addonPrice" class="form-label fw-bold" style="font-size: 13px;">Đơn giá (VNĐ) <span class="text-danger">*</span></label>
+                            <input type="number" id="addonPrice" class="form-control" placeholder="Ví dụ: 15000" style="border-radius: 8px;" required />
+                        </div>
+                        <div class="col-md-5">
+                            <label for="addonUnit" class="form-label fw-bold" style="font-size: 13px;">Đơn vị tính</label>
+                            <select id="addonUnit" class="form-select" style="border-radius: 8px;">
+                                <option value="cuốn" selected>cuốn</option>
+                                <option value="trang">trang</option>
+                                <option value="tờ">tờ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-3 pt-2 border-top">
+                        <button type="button" class="btn btn-link text-decoration-none text-muted fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-danger fw-bold px-4" style="border-radius: 8px;">Thêm mới</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showAlert(msg) {
+            const alertBox = document.getElementById("ajaxAlert");
+            document.getElementById("ajaxAlertMsg").innerText = msg;
+            alertBox.classList.remove("d-none");
+            setTimeout(function() {
+                alertBox.classList.add("d-none");
+            }, 3000);
+        }
+
+        // Lưu giá tiền in cơ bản khi mất focus
+        function savePrice(input) {
+            const serviceId = input.getAttribute("data-service-id");
+            const price = parseFloat(input.value);
+
+            if (isNaN(price) || price < 0) {
+                alert("Đơn giá không hợp lệ.");
+                return;
+            }
+
+            $.post("/ShopAdmin/UpdateServicePrice", { id: serviceId, price: price }, function(response) {
+                if (response.success) {
+                    showAlert("Đã cập nhật đơn giá dịch vụ!");
+                    input.style.borderColor = "#10b981"; // Đổi sang viền xanh báo hiệu lưu tốt
+                    setTimeout(() => { input.style.borderColor = "#cbd5e1"; }, 1000);
+                } else {
+                    alert(response.message || "Lỗi lưu thay đổi.");
+                }
+            });
+        }
+
+        // Bật/tắt dịch vụ in cơ bản
+        function toggleStatus(checkbox, serviceId) {
+            const isActive = checkbox.checked;
+            $.post("/ShopAdmin/ToggleServiceStatus", { id: serviceId, isActive: isActive }, function(response) {
+                if (response.success) {
+                    showAlert(isActive ? "Đã bật dịch vụ!" : "Đã tạm dừng dịch vụ!");
+                } else {
+                    alert(response.message || "Lỗi cập nhật trạng thái.");
+                    checkbox.checked = !isActive; // revert nếu lỗi
+                }
+            });
+        }
+
+        // Form submit Thêm tiện ích mới
+        document.getElementById("addonForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const name = document.getElementById("addonName").value.trim();
+            const price = parseFloat(document.getElementById("addonPrice").value);
+            const unit = document.getElementById("addonUnit").value;
+
+            if (name === "" || isNaN(price)) return;
+
+            $.post("/ShopAdmin/AddAddonService", { serviceName: name, basePrice: price, unit: unit }, function(response) {
+                if (response.success) {
+                    // Đóng modal
+                    const modalEl = document.getElementById("addAddonModal");
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+
+                    // Xóa dòng rỗng nếu có
+                    const noAddonRow = document.getElementById("noAddonRow");
+                    if (noAddonRow) noAddonRow.remove();
+
+                    // Append dòng mới vào bảng
+                    const tableBody = document.getElementById("addonTableBody");
+                    const newRowHtml = `
+                        <tr id="addon-row-${response.id}">
+                            <td class="fw-semibold">${name}</td>
+                            <td>${response.price}</td>
+                            <td class="text-end text-muted fs-5">
+                                <i class="bi bi-trash cursor-pointer hover-text-danger ms-3" title="Xóa" onclick="deleteAddon(${response.id})"></i>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML("beforeend", newRowHtml);
+                    
+                    // Reset form
+                    document.getElementById("addonForm").reset();
+                    showAlert("Thêm mới dịch vụ gia công thành công!");
+                } else {
+                    alert(response.message || "Lỗi thêm tiện ích.");
+                }
+            });
+        });
+
+        // Xóa tiện ích gia công
+        function deleteAddon(id) {
+            if (!confirm("Bạn có chắc chắn muốn xóa dịch vụ gia công này?")) return;
+
+            $.post("/ShopAdmin/DeleteService", { id: id }, function(response) {
+                if (response.success) {
+                    document.getElementById("addon-row-" + id).remove();
+                    
+                    // Nếu không còn dòng nào, hiện thông báo rỗng
+                    const tableBody = document.getElementById("addonTableBody");
+                    if (tableBody.children.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr id="noAddonRow">
+                                <td colspan="3" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Chưa có dịch vụ gia công đi kèm nào.
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    showAlert("Xóa dịch vụ thành công!");
+                } else {
+                    alert(response.message || "Lỗi xóa dịch vụ.");
+                }
+            });
+        }
+    </script>
+}

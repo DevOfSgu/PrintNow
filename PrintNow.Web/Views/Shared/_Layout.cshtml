@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PrintNow.Web</title>
+    <script type="importmap"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/PrintNow.Web.styles.css" asp-append-version="true" />
+    <style>
+        .navbar-custom {
+            padding: 16px 0;
+            background-color: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .nav-link-custom {
+            font-weight: 600;
+            color: var(--on-surface) !important;
+            padding: 8px 16px !important;
+            margin: 0 8px;
+        }
+        .nav-link-custom.active {
+            color: var(--primary) !important;
+            border-bottom: 2px solid var(--primary);
+        }
+        .nav-link-login {
+            font-weight: 700;
+            color: var(--primary) !important;
+            padding: 8px 24px !important;
+        }
+        .footer-custom {
+            background-color: var(--surface-container);
+            padding: 32px 0;
+            color: var(--on-surface-variant);
+            font-size: 14px;
+        }
+        .footer-links a {
+            color: var(--on-surface-variant);
+            text-decoration: underline;
+            margin-left: 24px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body style="background-color: var(--surface);">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-light navbar-custom">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/logoapp.png" alt="PrintNow" height="36" style="object-fit: contain;" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav mx-auto">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            if (User.IsInRole("ShopOwner"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-custom" asp-area="" asp-controller="ShopAdmin" asp-action="Index">Tổng quan</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-custom" asp-area="" asp-controller="ShopAdmin" asp-action="Orders">Đơn hàng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-custom" asp-area="" asp-controller="ShopAdmin" asp-action="Services">Dịch vụ</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-custom" asp-area="" asp-controller="ShopAdmin" asp-action="Messages">Tin nhắn</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-custom" asp-area="" asp-controller="Customer" asp-action="Index">Khám phá</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-custom" asp-area="" asp-controller="Customer" asp-action="Orders">Đơn hàng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-custom" asp-area="" asp-controller="Customer" asp-action="Messages">Tin nhắn</a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item d-flex align-items-center me-3">
+                                <span class="fw-bold">@User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-outline-primary-brand" asp-area="" asp-controller="Auth" asp-action="Logout">Đăng xuất</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item d-flex align-items-center">
+                                <a class="nav-link nav-link-login" asp-area="" asp-controller="Auth" asp-action="Login">Đăng nhập</a>
+                            </li>
+                            <li class="nav-item ms-2">
+                                <a class="btn btn-primary-brand" style="padding: 8px 24px;" asp-area="" asp-controller="Auth" asp-action="Register">Đăng ký</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="footer-custom">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <img src="~/logoapp.png" alt="PrintNow" height="24" class="me-3" />
+                <span>&copy; 2024 PrintNow. Bảo lưu mọi quyền.</span>
+            </div>
+            <div class="footer-links">
+                <a href="#">Chính sách bảo mật</a>
+                <a href="#">Điều khoản dịch vụ</a>
+            </div>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

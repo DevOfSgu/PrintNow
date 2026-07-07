@@ -1,0 +1,255 @@
+@model PrintNow.Web.Models.Shop
+@{
+    ViewData["Title"] = "Tổng quan";
+    Layout = "_ShopAdminLayout";
+}
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; height: 100%;">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="text-muted mb-1 fw-bold" style="font-size: 14px;">Đơn hàng mới hôm nay</p>
+                    <h2 class="fw-bold mb-2" style="font-size: 32px; color: var(--on-surface);">@ViewBag.NewOrders</h2>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: var(--secondary-container); color: var(--primary);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; height: 100%;">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="text-muted mb-1 fw-bold" style="font-size: 14px;">Doanh thu hôm nay</p>
+                    <h2 class="fw-bold mb-2" style="font-size: 32px; color: var(--on-surface);">@ViewBag.Revenue ₫</h2>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: var(--secondary-container); color: var(--primary);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <path d="M6 12h.01M18 12h.01"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; height: 100%;">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="text-muted mb-1 fw-bold" style="font-size: 14px;">File chờ in</p>
+                    <h2 class="fw-bold mb-2" style="font-size: 32px; color: var(--on-surface);">@ViewBag.PendingFiles</h2>
+                    <p class="text-danger small mb-0" style="font-weight: 600;">Cần xử lý ngay</p>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background-color: var(--secondary-container); color: var(--primary);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; height: 100%;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0" style="font-size: 20px;">Thống kê đơn hàng</h5>
+                    <select class="form-select form-select-sm" style="width: auto; border-radius: 8px;">
+                        <option>Tháng này</option>
+                        <option>Tuần này</option>
+                    </select>
+                </div>
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0" style="border-radius: 12px; height: 100%;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0" style="font-size: 20px;">Thống kê doanh thu</h5>
+                    <select class="form-select form-select-sm" style="width: auto; border-radius: 8px;">
+                        <option>Tháng này</option>
+                        <option>Tuần này</option>
+                    </select>
+                </div>
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4" style="font-size: 20px;">Đơn hàng gần đây</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th class="border-0 rounded-start">Mã ĐH</th>
+                                <th class="border-0">Khách hàng</th>
+                                <th class="border-0">Tổng tiền</th>
+                                <th class="border-0">Ngày đặt</th>
+                                <th class="border-0">Trạng thái</th>
+                                <th class="border-0 rounded-end text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.RecentOrders != null)
+                            {
+                                foreach (var order in ViewBag.RecentOrders)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">#@order.Id</td>
+                                        <td>@order.Customer.FullName</td>
+                                        <td class="fw-bold text-success">@order.TotalAmount.ToString("#,##0") ₫</td>
+                                        <td>@order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if(order.Status == "Pending")
+                                            {
+                                                <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                            }
+                                            else if(order.Status == "Completed")
+                                            {
+                                                <span class="badge bg-success">Hoàn thành</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@order.Status</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="#" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">Chi tiết</a>
+                                        </td>
+                                    </tr>
+                                }
+                                if (((IEnumerable<dynamic>)ViewBag.RecentOrders).Count() == 0)
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">Chưa có đơn hàng nào.</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        const ctxOrders = document.getElementById('ordersChart').getContext('2d');
+        const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+
+        const orderData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartOrderCounts));
+        const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartRevenues));
+        
+        const labels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+        // Get the current day index (0 for Monday, 6 for Sunday)
+        const currentDayIndex = new Date().getDay() - 1;
+        const normalizedIndex = currentDayIndex < 0 ? 6 : currentDayIndex;
+
+        // Custom colors for bars: Active day is red, others are light gray
+        const backgroundColors = labels.map((_, index) => 
+            index === normalizedIndex ? '#D62839' : '#E5E7EB'
+        );
+
+        new Chart(ctxOrders, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Đơn hàng',
+                    data: orderData,
+                    backgroundColor: backgroundColors,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f3f3f3'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        new Chart(ctxRevenue, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (₫)',
+                    data: revenueData,
+                    borderColor: '#D62839',
+                    backgroundColor: 'rgba(214, 40, 57, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#D62839',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f3f3f3',
+                            borderDash: [5, 5]
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
