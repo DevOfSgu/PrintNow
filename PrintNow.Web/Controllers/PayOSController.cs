@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Net.payOS;
-using Net.payOS.Types;
+using PayOS;
+using PayOS.Models;
 using PrintNow.Web.Data;
 using PrintNow.Web.Models;
 
@@ -12,11 +12,11 @@ namespace PrintNow.Web.Controllers
     [Route("api/[controller]")]
     public class PayOSController : Controller
     {
-        private readonly PayOS _payOS;
+        private readonly PayOSClient _payOS;
         private readonly PrintNowContext _context;
         private readonly IConfiguration _configuration;
 
-        public PayOSController(PayOS payOS, PrintNowContext context, IConfiguration configuration)
+        public PayOSController(PayOSClient payOS, PrintNowContext context, IConfiguration configuration)
         {
             _payOS = payOS;
             _context = context;
@@ -27,20 +27,21 @@ namespace PrintNow.Web.Controllers
         /// Webhook nhận thông báo thanh toán từ PayOS
         /// </summary>
         [HttpPost("webhook")]
-        public async Task<IActionResult> Webhook([FromBody] WebhookType data)
+        public async Task<IActionResult> Webhook([FromBody] Webhook webhook)
         {
             try
             {
-                // Xác thực chữ ký từ PayOS
-                var verifiedData = _payOS.verifyPaymentWebhookData(data);
+                // Xác thực chữ ký từ PayOS (SDK v2)
+                var verifiedData = await _payOS.Webhooks.VerifyAsync(webhook);
 
                 if (verifiedData == null)
                 {
                     return BadRequest(new { error = "Invalid webhook signature" });
                 }
 
-                var orderCode = verifiedData.orderCode;
-                var status = (verifiedData.desc == "success" || verifiedData.code == "00") ? "PAID" : "CANCELLED";
+                var orderCode = verifiedData.OrderCode;
+                var code = verifiedData.Code ?? "";
+                var status = (code == "00") ? "PAID" : "CANCELLED";
 
                 // Tìm giao dịch trong hệ thống
                 var transaction = await _context.PaymentTransactions
@@ -129,13 +130,13 @@ namespace PrintNow.Web.Controllers
                     return NotFound(new { message = "Transaction not found" });
                 }
 
-                var paymentInfo = await _payOS.getPaymentLinkInformation(long.Parse(orderCode));
+                var paymentInfo = await _payOS.PaymentRequests.GetPaymentLinkInfoAsync(long.Parse(orderCode));
 
                 return Ok(new
                 {
-                    status = paymentInfo.status,
+                    status = paymentInfo.Status,
                     transactionStatus = transaction.Status,
-                    amount = paymentInfo.amount,
+                    amount = paymentInfo.Amount,
                     transaction.Amount
                 });
             }
@@ -168,8 +169,8 @@ namespace PrintNow.Web.Controllers
                 {
                     try
                     {
-                        var paymentInfo = await _payOS.getPaymentLinkInformation(long.Parse(fee.PayOSOrderCode));
-                        var payOSStatus = paymentInfo.status;
+                        var paymentInfo = await _payOS.PaymentRequests.GetPaymentLinkInfoAsync(long.Parse(fee.PayOSOrderCode));
+                        var payOSStatus = paymentInfo.Status;
 
                         if (payOSStatus == "PAID")
                         {
@@ -261,8 +262,8 @@ namespace PrintNow.Web.Controllers
                     {
                         try
                         {
-                            var paymentInfo = await _payOS.getPaymentLinkInformation(long.Parse(transaction.PayOSOrderCode));
-                            if (paymentInfo.status == "PAID")
+                            var paymentInfo = await _payOS.PaymentRequests.GetPaymentLinkInfoAsync(long.Parse(transaction.PayOSOrderCode));
+                            if (paymentInfo.Status == "PAID")
                             {
                                 transaction.Status = "Completed";
                                 transaction.CompletedAt = DateTime.UtcNow;
@@ -282,7 +283,7 @@ namespace PrintNow.Web.Controllers
 
                             return Ok(new
                             {
-                                status = paymentInfo.status,
+                                status = paymentInfo.Status,
                                 paymentStatus = order.PaymentStatus,
                                 hasExistingPayment = true,
                                 checkoutUrl = existingCheckoutUrl,
@@ -312,8 +313,8 @@ namespace PrintNow.Web.Controllers
                 {
                     try
                     {
-                        var paymentInfo = await _payOS.getPaymentLinkInformation(long.Parse(transaction.PayOSOrderCode));
-                        if (paymentInfo.status == "PAID")
+                        var paymentInfo = await _payOS.PaymentRequests.GetPaymentLinkInfoAsync(long.Parse(transaction.PayOSOrderCode));
+                        if (paymentInfo.Status == "PAID")
                         {
                             transaction.Status = "Completed";
                             transaction.CompletedAt = DateTime.UtcNow;
@@ -330,7 +331,7 @@ namespace PrintNow.Web.Controllers
                             await _context.SaveChangesAsync();
                             return Ok(new { status = "Completed", paymentStatus = "Paid" });
                         }
-                        return Ok(new { status = paymentInfo.status, paymentStatus = order.PaymentStatus });
+                        return Ok(new { status = paymentInfo.Status, paymentStatus = order.PaymentStatus });
                     }
                     catch
                     {
@@ -373,24 +374,26 @@ namespace PrintNow.Web.Controllers
 
                 var domain = $"{Request.Scheme}://{Request.Host}";
 
-                var paymentData = new PaymentData(
-                    orderCode: orderCode,
-                    amount: (int)order.TotalAmount,
-                    description: description,
-                    items: order.OrderDetails.Select(d => new ItemData(
-                        name: d.FileName.Length > 30 ? d.FileName[..30] : d.FileName,
-                        quantity: d.Quantity,
-                        price: (int)d.SubTotal
-                    )).ToList(),
-                    returnUrl: $"{domain}/Customer/PaymentSuccess?orderId={order.Id}",
-                    cancelUrl: $"{domain}/Customer/PaymentCancel?orderId={order.Id}"
-                );
+                var paymentRequest = new CreatePaymentLinkRequest
+                {
+                    OrderCode = orderCode,
+                    Amount = (int)order.TotalAmount,
+                    Description = description,
+                    Items = order.OrderDetails.Select(d => new Item
+                    {
+                        Name = d.FileName.Length > 30 ? d.FileName[..30] : d.FileName,
+                        Quantity = d.Quantity,
+                        Price = (int)d.SubTotal
+                    }).ToList(),
+                    ReturnUrl = $"{domain}/Customer/PaymentSuccess?orderId={order.Id}",
+                    CancelUrl = $"{domain}/Customer/PaymentCancel?orderId={order.Id}"
+                };
 
-                var response = await _payOS.createPaymentLink(paymentData);
+                var response = await _payOS.PaymentRequests.CreateAsync(paymentRequest);
 
                 // Lấy qrCode từ PayOS (VietQR - quét được bằng app ngân hàng)
                 string? qrCode = null;
-                try { qrCode = response.qrCode; } catch { /* fallback */ }
+                try { qrCode = response.QrCode; } catch { /* fallback */ }
 
                 // Lưu giao dịch (lưu cả checkoutUrl và qrCode vào PayOSResponse)
                 var transaction = new PaymentTransaction
@@ -400,8 +403,8 @@ namespace PrintNow.Web.Controllers
                     ShopId = order.ShopId,
                     Amount = order.TotalAmount,
                     PayOSOrderCode = orderCode.ToString(),
-                    PayOSPaymentLinkId = response.paymentLinkId,
-                    PayOSResponse = $"{response.checkoutUrl}|{qrCode}",
+                    PayOSPaymentLinkId = response.PaymentLinkId,
+                    PayOSResponse = $"{response.CheckoutUrl}|{qrCode}",
                     Status = "Pending"
                 };
                 _context.PaymentTransactions.Add(transaction);
@@ -411,7 +414,7 @@ namespace PrintNow.Web.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, checkoutUrl = response.checkoutUrl, qrCode });
+                return Json(new { success = true, checkoutUrl = response.CheckoutUrl, qrCode });
             }
             catch (Exception ex)
             {
@@ -449,23 +452,24 @@ namespace PrintNow.Web.Controllers
                 var orderCode = long.Parse(DateTimeOffset.Now.ToString("ffffff"));
                 var domain = $"{Request.Scheme}://{Request.Host}";
 
-                var paymentData = new PaymentData(
-                    orderCode: orderCode,
-                    amount: (int)fee.Amount,
-                    description: $"Phi san T{fee.Month}/{fee.Year}",
-                    items: new List<ItemData>
+                var paymentRequest = new CreatePaymentLinkRequest
+                {
+                    OrderCode = orderCode,
+                    Amount = (int)fee.Amount,
+                    Description = $"Phi san T{fee.Month}/{fee.Year}",
+                    Items = new List<Item>
                     {
-                        new ItemData($"Phí sàn tháng {fee.Month}/{fee.Year}", 1, (int)fee.Amount)
+                        new Item { Name = $"Phí sàn tháng {fee.Month}/{fee.Year}", Quantity = 1, Price = (int)fee.Amount }
                     },
-                    returnUrl: $"{domain}/ShopAdmin/FeePaymentSuccess?feeId={fee.Id}",
-                    cancelUrl: $"{domain}/ShopAdmin/FeePaymentCancel?feeId={fee.Id}"
-                );
+                    ReturnUrl = $"{domain}/ShopAdmin/FeePaymentSuccess?feeId={fee.Id}",
+                    CancelUrl = $"{domain}/ShopAdmin/FeePaymentCancel?feeId={fee.Id}"
+                };
 
-                var response = await _payOS.createPaymentLink(paymentData);
+                var response = await _payOS.PaymentRequests.CreateAsync(paymentRequest);
 
                 // Lấy qrCode từ PayOS (VietQR - quét được bằng app ngân hàng)
                 string? qrCode = null;
-                try { qrCode = response.qrCode; } catch { /* fallback */ }
+                try { qrCode = response.QrCode; } catch { /* fallback */ }
 
                 // Lưu giao dịch (lưu cả checkoutUrl và qrCode vào PayOSResponse để dùng lại)
                 var transaction = new PaymentTransaction
@@ -475,8 +479,8 @@ namespace PrintNow.Web.Controllers
                     ShopId = shop.Id,
                     Amount = fee.Amount,
                     PayOSOrderCode = orderCode.ToString(),
-                    PayOSPaymentLinkId = response.paymentLinkId,
-                    PayOSResponse = $"{response.checkoutUrl}|{qrCode}",
+                    PayOSPaymentLinkId = response.PaymentLinkId,
+                    PayOSResponse = $"{response.CheckoutUrl}|{qrCode}",
                     Status = "Pending"
                 };
                 _context.PaymentTransactions.Add(transaction);
@@ -484,7 +488,7 @@ namespace PrintNow.Web.Controllers
                 fee.PayOSOrderCode = orderCode.ToString();
                 await _context.SaveChangesAsync();
 
-                return Json(new { success = true, checkoutUrl = response.checkoutUrl, qrCode });
+                return Json(new { success = true, checkoutUrl = response.CheckoutUrl, qrCode });
             }
             catch (Exception ex)
             {

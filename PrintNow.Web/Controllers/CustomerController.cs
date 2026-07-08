@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PayOS;
 using PrintNow.Web.Data;
 using System.Security.Claims;
 using PrintNow.Web.Models;
@@ -601,9 +602,9 @@ namespace PrintNow.Web.Controllers
                         // Fallback: check PayOS directly
                         try
                         {
-                            var payOS = HttpContext.RequestServices.GetRequiredService<Net.payOS.PayOS>();
-                            var paymentInfo = await payOS.getPaymentLinkInformation(long.Parse(transaction.PayOSOrderCode));
-                            if (paymentInfo.status == "PAID")
+                            var payOS = HttpContext.RequestServices.GetRequiredService<PayOSClient>();
+                            var paymentInfo = await payOS.PaymentRequests.GetPaymentLinkInfoAsync(long.Parse(transaction.PayOSOrderCode));
+                            if (paymentInfo.Status == "PAID")
                             {
                                 transaction.Status = "Completed";
                                 transaction.CompletedAt = DateTime.UtcNow;
