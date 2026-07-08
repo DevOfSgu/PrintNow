@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using PayOS;
+using Net.payOS;
 using PrintNow.Web.Data;
 using PrintNow.Web.Models;
 using PrintNow.Web.Services;
@@ -23,25 +23,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Auth/AccessDenied";
     });
 
-// Cấu hình PayOS (SDK v2)
+// Cấu hình PayOS
 var payOSClientId = builder.Configuration["PayOS:ClientId"] ?? "";
 var payOSApiKey = builder.Configuration["PayOS:ApiKey"] ?? "";
 var payOSChecksumKey = builder.Configuration["PayOS:ChecksumKey"] ?? "";
 
 if (!string.IsNullOrEmpty(payOSClientId) && !string.IsNullOrEmpty(payOSApiKey) && !string.IsNullOrEmpty(payOSChecksumKey))
 {
-    var payOSClient = new PayOSClient(new PayOSOptions
-    {
-        ClientId = payOSClientId,
-        ApiKey = payOSApiKey,
-        ChecksumKey = payOSChecksumKey
-    });
-    builder.Services.AddSingleton(payOSClient);
+    var payOS = new PayOS(payOSClientId, payOSApiKey, payOSChecksumKey);
+    builder.Services.AddSingleton(payOS);
 }
 else
 {
     // Sẽ kiểm tra null trong controller và thông báo cần cấu hình
-    builder.Services.AddSingleton<PayOSClient?>(sp => (PayOSClient?)null);
+    builder.Services.AddSingleton<PayOS?>(sp => (PayOS?)null);
 }
 
 var app = builder.Build();

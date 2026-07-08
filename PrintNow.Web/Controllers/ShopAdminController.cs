@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
-using PayOS;
+using Net.payOS;
+using Net.payOS.Types;
 using PrintNow.Web.Data;
 using PrintNow.Web.Models;
 using System.Security.Claims;
@@ -591,7 +592,7 @@ namespace PrintNow.Web.Controllers
             {
                 try
                 {
-                    var payOS = HttpContext.RequestServices.GetRequiredService<PayOSClient>();
+                    var payOS = HttpContext.RequestServices.GetRequiredService<Net.payOS.PayOS>();
                     if (payOS == null)
                     {
                         ViewBag.PayOSNotConfigured = true;
@@ -620,9 +621,9 @@ namespace PrintNow.Web.Controllers
                 {
                     try
                     {
-                        var payOS = HttpContext.RequestServices.GetRequiredService<PayOSClient>();
-                        var paymentInfo = await payOS.PaymentRequests.GetPaymentLinkInfoAsync(long.Parse(fee.PayOSOrderCode));
-                        if (paymentInfo.Status == "PAID")
+                        var payOS = HttpContext.RequestServices.GetRequiredService<Net.payOS.PayOS>();
+                        var paymentInfo = await payOS.getPaymentLinkInformation(long.Parse(fee.PayOSOrderCode));
+                        if (paymentInfo.status == "PAID")
                         {
                             fee.Status = "Paid";
                             fee.PaidAt = DateTime.UtcNow;
