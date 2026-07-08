@@ -1,0 +1,108 @@
+@model PrintNow.Web.Models.Shop
+@{
+    ViewData["Title"] = "Tài khoản ngân hàng";
+    Layout = "_ShopAdminLayout";
+}
+
+<div class="mb-4">
+    <h3 class="fw-bold" style="color: #0f172a;">Tài khoản ngân hàng</h3>
+    <p class="text-muted small">Cập nhật thông tin tài khoản ngân hàng để nhận tiền từ đơn hàng và rút tiền.</p>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+            <div class="card-body p-4">
+                <form id="bankAccountForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" style="font-size: 14px;">Chủ tài khoản</label>
+                        <input type="text" id="bankAccountName" class="form-control" 
+                               value="@Model.BankAccountName" placeholder="Ví dụ: NGUYEN VAN A"
+                               style="border-radius: 8px; padding: 12px;" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" style="font-size: 14px;">Số tài khoản</label>
+                        <input type="text" id="bankAccountNumber" class="form-control" 
+                               value="@Model.BankAccountNumber" placeholder="Ví dụ: 1234567890"
+                               style="border-radius: 8px; padding: 12px;" />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold" style="font-size: 14px;">Tên ngân hàng</label>
+                        <input type="text" id="bankName" class="form-control" 
+                               value="@Model.BankName" placeholder="Ví dụ: Vietcombank, Techcombank, MB Bank..."
+                               style="border-radius: 8px; padding: 12px;" />
+                    </div>
+                    <button type="submit" class="btn btn-danger fw-bold px-4" style="border-radius: 8px;">
+                        <i class="bi bi-save me-1"></i> Lưu thông tin
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width: 40px; height: 40px; background: #fef3c7; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #d97706;">
+                        <i class="bi bi-info-circle-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1" style="font-size: 14px;">Lưu ý quan trọng</h6>
+                        <p class="text-muted small mb-0">Thông tin ngân hàng này sẽ được sử dụng khi bạn yêu cầu rút tiền. Vui lòng kiểm tra kỹ trước khi lưu.</p>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.BankAccountNumber))
+                {
+                    <div class="p-3 rounded" style="background: #f1f5f9;">
+                        <div class="text-muted small">Thông tin hiện tại:</div>
+                        <div class="fw-bold mt-1">
+                            @Model.BankAccountName - @Model.BankAccountNumber - @Model.BankName
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4 mt-4 mt-lg-0">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+            <div class="card-body p-4 text-center">
+                <div style="font-size: 48px; color: var(--primary);">
+                    <i class="bi bi-bank"></i>
+                </div>
+                <h6 class="fw-bold mt-3">Số dư khả dụng</h6>
+                <h3 class="fw-bold text-danger mt-2">@Model.Balance.ToString("N0")đ</h3>
+                <a href="/ShopAdmin/Withdrawals" class="btn btn-outline-danger fw-bold w-100 mt-3" style="border-radius: 8px;">
+                    <i class="bi bi-cash-stack me-1"></i> Yêu cầu rút tiền
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('bankAccountForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var data = {
+                bankAccountName: document.getElementById('bankAccountName').value.trim(),
+                bankAccountNumber: document.getElementById('bankAccountNumber').value.trim(),
+                bankName: document.getElementById('bankName').value.trim()
+            };
+
+            if (!data.bankAccountName || !data.bankAccountNumber || !data.bankName) {
+                alert('Vui lòng nhập đầy đủ thông tin.');
+                return;
+            }
+
+            $.post('/ShopAdmin/UpdateBankAccount', data, function(response) {
+                if (response.success) {
+                    alert('Cập nhật thông tin ngân hàng thành công!');
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            });
+        });
+    </script>
+}

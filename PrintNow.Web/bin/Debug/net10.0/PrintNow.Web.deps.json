@@ -11,7 +11,8 @@
           "Microsoft.EntityFrameworkCore.SqlServer": "10.0.9",
           "Microsoft.EntityFrameworkCore.Tools": "10.0.9",
           "NPOI": "2.8.0",
-          "PDFsharp": "6.2.4"
+          "PDFsharp": "6.2.4",
+          "payOS.Net5": "1.0.7"
         },
         "runtime": {
           "PrintNow.Web.dll": {}
@@ -706,6 +707,17 @@
           }
         }
       },
+      "payOS.Net5/1.0.7": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "runtime": {
+          "lib/net5.0/payos-lib-dotnet-5.0.dll": {
+            "assemblyVersion": "1.0.7.0",
+            "fileVersion": "1.0.7.0"
+          }
+        }
+      },
       "PDFsharp/6.2.4": {
         "runtime": {
           "lib/net10.0/PdfSharp.BarCodes.dll": {
@@ -1261,6 +1273,13 @@
       "sha512": "sha512-fAAc8iUvDuRu+e+TU+Ghg4czJPT1JY/v/wJjHvFaHJo0Y6XMWvanbH1U6nPaCK36UtcIc1Y9uOXNomRhdAaGEw==",
       "path": "npoi/2.8.0",
       "hashPath": "npoi.2.8.0.nupkg.sha512"
+    },
+    "payOS.Net5/1.0.7": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jhTF6swgXU2lmp5OPk9J+4hnWmsoCx+sW+mlYY8HQ1A+nLv+3qrKW56JAsDt/5tt73oqdfvcsqfzNYlHPKQmKQ==",
+      "path": "payos.net5/1.0.7",
+      "hashPath": "payos.net5.1.0.7.nupkg.sha512"
     },
     "PDFsharp/6.2.4": {
       "type": "package",

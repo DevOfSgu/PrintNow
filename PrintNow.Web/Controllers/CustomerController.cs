@@ -132,11 +132,28 @@ namespace PrintNow.Web.Controllers
             double minLng = lng - lngOffset;
             double maxLng = lng + lngOffset;
 
+            var now = DateTime.UtcNow;
             var shopsRaw = await _context.Shops
                 .Include(s => s.Reviews)
-                .Where(s => s.IsActive && s.Latitude != null && s.Longitude != null)
+                .Where(s => s.IsActive && !s.IsLocked && s.Latitude != null && s.Longitude != null)
+                .Where(s => s.BankAccountName != null && s.BankAccountNumber != null && s.BankAccountName != "" && s.BankAccountNumber != "")
                 .Where(s => s.Latitude >= minLat && s.Latitude <= maxLat && s.Longitude >= minLng && s.Longitude <= maxLng)
                 .ToListAsync();
+
+            // Lọc shop đã đóng phí sàn tháng hiện tại
+            var hasFeeRecords = await _context.PlatformFees
+                .AnyAsync(f => f.Month == now.Month && f.Year == now.Year);
+
+            if (hasFeeRecords)
+            {
+                // Chỉ lọc nếu đã có hóa đơn phí sàn tháng này (tránh mất hết shop khi admin chưa tạo phí)
+                var paidShopIds = await _context.PlatformFees
+                    .Where(f => f.Month == now.Month && f.Year == now.Year && f.Status == "Paid")
+                    .Select(f => f.ShopId)
+                    .ToListAsync();
+
+                shopsRaw = shopsRaw.Where(s => paidShopIds.Contains(s.Id)).ToList();
+            }
 
             var shops = shopsRaw.Select(s => new
             {
@@ -169,6 +186,12 @@ namespace PrintNow.Web.Controllers
 
             if (shop == null) return NotFound();
 
+            // Check if shop is locked due to unpaid platform fee
+            if (shop.IsLocked)
+            {
+                ViewBag.IsShopLocked = true;
+            }
+
             ViewBag.UserLat = lat;
             ViewBag.UserLng = lng;
             
@@ -191,6 +214,13 @@ namespace PrintNow.Web.Controllers
                 .Include(s => s.Services)
                 .FirstOrDefaultAsync(s => s.Id == id);
             if (shop == null) return NotFound();
+
+            // Check if shop is locked
+            if (shop.IsLocked)
+            {
+                TempData["ErrorMessage"] = "Tiệm in này hiện đang tạm khóa. Vui lòng quay lại sau.";
+                return RedirectToAction("ShopDetail", new { id = id });
+            }
 
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdStr != null)
@@ -487,7 +517,7 @@ namespace PrintNow.Web.Controllers
                 {
                     order.ShippingAddress = shippingAddress ?? string.Empty;
                     order.ShippingFee = 20000m;
-                    order.TotalAmount += 20000m; // Cộng thêm phí vận chuyển vào tổng tiền
+                    order.TotalAmount += 20000m;
                 }
                 else
                 {
@@ -496,25 +526,137 @@ namespace PrintNow.Web.Controllers
                 }
 
                 order.Status = "Pending";
-                order.CreatedAt = DateTime.UtcNow; // Reset lại thời gian đặt
-                order.PaymentStatus = paymentMethod == "MoMo" ? "Paid" : "Unpaid";
+                order.CreatedAt = DateTime.UtcNow;
+                order.PaymentStatus = paymentMethod == "PayOS" ? "Unpaid" : "Unpaid";
                 
                 _context.Orders.Update(order);
                 await _context.SaveChangesAsync();
+            }
 
-                TempData["PaymentMethod"] = paymentMethod;
-                TempData["OrderTotal"] = order.TotalAmount.ToString("N0");
-                if (paymentMethod == "MoMo")
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrderInfo(int orderId, string deliveryMethod, string? shippingAddress, string paymentMethod)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var order = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == userId && o.Status == "Cart");
+
+            if (order == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy đơn hàng." });
+            }
+
+            order.DeliveryMethod = deliveryMethod;
+            order.PaymentMethod = paymentMethod;
+
+            var baseAmount = order.TotalAmount - order.ShippingFee;
+            if (deliveryMethod == "Delivery")
+            {
+                order.ShippingAddress = shippingAddress ?? string.Empty;
+                order.ShippingFee = 20000m;
+                order.TotalAmount = baseAmount + 20000m;
+            }
+            else
+            {
+                order.ShippingAddress = null;
+                order.ShippingFee = 0m;
+                order.TotalAmount = baseAmount;
+            }
+
+            order.Status = "Pending";
+            order.CreatedAt = DateTime.UtcNow;
+            order.PaymentStatus = "Unpaid";
+
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PaymentSuccess(int orderId)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == userId);
+
+            if (order != null)
+            {
+                // Check transaction status
+                var transaction = await _context.PaymentTransactions
+                    .FirstOrDefaultAsync(t => t.OrderId == orderId && t.TransactionType == "OrderPayment");
+
+                if (transaction != null)
                 {
-                    TempData["SuccessMessage"] = "Thanh toán MoMo thành công! Đơn hàng của bạn đã được xác nhận.";
+                    if (transaction.Status == "Completed")
+                    {
+                        order.PaymentStatus = "Paid";
+                        await _context.SaveChangesAsync();
+                        TempData["SuccessMessage"] = "Thanh toán thành công! Đơn hàng của bạn đã được xác nhận.";
+                    }
+                    else
+                    {
+                        // Fallback: check PayOS directly
+                        try
+                        {
+                            var payOS = HttpContext.RequestServices.GetRequiredService<Net.payOS.PayOS>();
+                            var paymentInfo = await payOS.getPaymentLinkInformation(long.Parse(transaction.PayOSOrderCode));
+                            if (paymentInfo.status == "PAID")
+                            {
+                                transaction.Status = "Completed";
+                                transaction.CompletedAt = DateTime.UtcNow;
+                                order.PaymentStatus = "Paid";
+
+                                // Cộng doanh thu vào shop
+                                var platformFeePercent = _configuration.GetValue<decimal>("PayOS:PlatformFeePercent");
+                                if (platformFeePercent <= 0) platformFeePercent = 0.10m;
+                                var shop = await _context.Shops.FindAsync(order.ShopId);
+                                if (shop != null)
+                                {
+                                    shop.Balance += order.TotalAmount * (1 - platformFeePercent);
+                                }
+
+                                await _context.SaveChangesAsync();
+                                TempData["SuccessMessage"] = "Thanh toán thành công! Đơn hàng của bạn đã được xác nhận.";
+                            }
+                            else
+                            {
+                                TempData["SuccessMessage"] = $"Đặt hàng thành công! Đơn hàng #{order.Id} đang chờ xác nhận thanh toán.";
+                            }
+                        }
+                        catch
+                        {
+                            TempData["SuccessMessage"] = $"Đặt hàng thành công! Đơn hàng #{order.Id} đang chờ xác nhận thanh toán.";
+                        }
+                    }
                 }
                 else
                 {
-                    TempData["SuccessMessage"] = $"Đặt hàng thành công! Hãy mang đủ {order.TotalAmount.ToString("N0")} VNĐ để thanh toán tại quán.";
+                    TempData["SuccessMessage"] = $"Đặt hàng thành công! Đơn hàng #{order.Id} đã được gửi đến tiệm in.";
                 }
             }
 
             return RedirectToAction("Orders");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PaymentCancel(int orderId)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == userId);
+
+            if (order != null)
+            {
+                // Revert status back to Cart if payment was cancelled
+                order.Status = "Cart";
+                order.PaymentStatus = "Unpaid";
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["SuccessMessage"] = "Thanh toán đã bị hủy. Bạn có thể thử lại.";
+            return RedirectToAction("Cart");
         }
 
         [HttpPost]

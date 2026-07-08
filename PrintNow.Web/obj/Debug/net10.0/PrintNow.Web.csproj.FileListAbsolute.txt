@@ -264,3 +264,4 @@ D:\Code\job\PrintNow\PrintNow.Web\obj\Debug\net10.0\compressed\j3r51am05m-{0}-6g
 D:\Code\job\PrintNow\PrintNow.Web\obj\Debug\net10.0\compressed\ysl68pk84f-{0}-vv2pjyngcs-vv2pjyngcs.gz
 D:\Code\job\PrintNow\PrintNow.Web\obj\Debug\net10.0\compressed\at8lrb3uj1-{0}-twrrmvzh3t-twrrmvzh3t.gz
 D:\Code\job\PrintNow\PrintNow.Web\obj\Debug\net10.0\compressed\ntytmazu5w-{0}-fk203sxdia-fk203sxdia.gz
+D:\Code\job\PrintNow\PrintNow.Web\bin\Debug\net10.0\payos-lib-dotnet-5.0.dll

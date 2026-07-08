@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "MHZuMARS+mE=",
+  "success": true,
+  "projectFilePath": "D:\\Code\\job\\PrintNow\\scratch\\check\\check.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\payos.net5\\1.0.7\\payos.net5.1.0.7.nupkg.sha512"
+  ],
+  "logs": []
+}

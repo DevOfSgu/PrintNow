@@ -41,50 +41,21 @@
         border-color: #cbd5e1;
     }
 
-    .momo-logo {
+    .payos-logo {
         width: 40px;
         height: 40px;
-        background-color: #a50064;
+        background: linear-gradient(135deg, #1890ff, #096dd9);
         color: white;
         border-radius: 8px;
         font-weight: 900;
-        font-size: 20px;
+        font-size: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-    
-    .cash-logo {
-        width: 40px;
-        height: 40px;
-        background-color: #f1f5f9;
-        color: #475569;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 
-    .btn-chat-owner {
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 20px;
-        padding: 10px 20px;
-        font-weight: 600;
-        font-size: 14px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        transition: background-color 0.2s;
-    }
-    .btn-chat-owner:hover {
-        background-color: var(--on-primary-fixed-variant);
-        color: white;
-    }
-    
     .btn-confirm-checkout {
         background-color: var(--primary);
         color: white;
@@ -99,6 +70,28 @@
     }
     .btn-confirm-checkout:hover {
         background-color: var(--on-primary-fixed-variant);
+        color: white;
+    }
+
+    .qr-section {
+        background: #f8fafc;
+        border: 2px dashed #e2e8f0;
+        border-radius: 16px;
+        padding: 32px;
+        text-align: center;
+    }
+    .qr-placeholder {
+        width: 200px;
+        height: 200px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        font-size: 48px;
+        color: var(--primary);
     }
 </style>
 
@@ -108,8 +101,8 @@
         <a href="/Customer/Cart" class="text-decoration-none text-muted small"><i class="bi bi-chevron-left"></i> Quay lại giỏ hàng</a>
     </div>
 
-    <form asp-action="ConfirmCheckout" method="post" id="checkoutForm">
-        <input type="hidden" name="orderId" value="@Model.Id" />
+    <div id="checkoutForm">
+        <input type="hidden" id="orderId" value="@Model.Id" />
         
         <h4 class="checkout-title">Thanh toán đơn hàng</h4>
 
@@ -159,7 +152,7 @@
 
         <!-- Phương thức nhận hàng -->
         <h6 class="checkout-section-title">Phương thức nhận hàng</h6>
-        <input type="hidden" name="deliveryMethod" id="deliveryMethodInput" value="Pickup" />
+        <input type="hidden" id="deliveryMethodInput" value="Pickup" />
         <div class="row g-3">
             <div class="col-12 col-md-6">
                 <div class="selector-card" id="card-delivery" onclick="selectDeliveryMethod('Delivery')">
@@ -167,7 +160,8 @@
                         <div class="text-danger fs-4 mt-1"><i class="bi bi-truck"></i></div>
                         <div class="flex-grow-1">
                             <h6 class="fw-bold mb-2" style="font-size: 15px;">Giao tận nơi</h6>
-                            <input type="text" class="form-control form-control-sm mt-2" name="shippingAddress" id="shippingAddressInput" placeholder="Nhập địa chỉ giao hàng của bạn..." onclick="event.stopPropagation()" />
+                            <input type="text" class="form-control form-control-sm mt-2" id="shippingAddressInput" 
+                                   placeholder="Nhập địa chỉ giao hàng của bạn..." onclick="event.stopPropagation()" />
                         </div>
                     </div>
                 </div>
@@ -185,48 +179,69 @@
             </div>
         </div>
 
-        <!-- Phương thức thanh toán -->
-        <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-            <h6 class="checkout-section-title m-0">Phương thức thanh toán</h6>
-            <a href="/Customer/Messages?shopId=@Model.ShopId" class="btn-chat-owner">
-                <i class="bi bi-chat-dots-fill"></i> Chat với chủ tiệm
-            </a>
-        </div>
-        
-        <input type="hidden" name="paymentMethod" id="paymentMethodInput" value="Cash" />
+        <!-- Phương thức thanh toán - PayOS only -->
+        <h6 class="checkout-section-title">Phương thức thanh toán</h6>
         <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <div class="selector-card" id="card-momo" onclick="selectPaymentMethod('MoMo')">
+            <div class="col-12">
+                <div class="selector-card selected" id="card-payos">
                     <div class="d-flex gap-3 align-items-center">
-                        <img src="/momo.png" alt="MoMo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;" />
+                        <div class="payos-logo">PayOS</div>
                         <div>
-                            <h6 class="fw-bold mb-0" style="font-size: 15px;">Ví MoMo</h6>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6">
-                <div class="selector-card selected" id="card-cash" onclick="selectPaymentMethod('Cash')">
-                    <div class="d-flex gap-3 align-items-center">
-                        <div class="cash-logo"><i class="bi bi-cash-stack"></i></div>
-                        <div>
-                            <h6 class="fw-bold mb-0" style="font-size: 15px;">Thanh toán khi nhận hàng</h6>
+                            <h6 class="fw-bold mb-1" style="font-size: 15px;">Chuyển khoản ngân hàng (PayOS)</h6>
+                            <p class="text-muted small mb-0">Quét mã QR hoặc chuyển khoản qua PayOS. Tự động xác nhận thanh toán.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Nút xác nhận -->
-        <button type="submit" class="btn-confirm-checkout">
-            Xác nhận & Thanh toán
-        </button>
-    </form>
+        <!-- PayOS QR -->
+        <div class="qr-section mt-4" id="paymentSection">
+            <div class="qr-placeholder" id="qrPlaceholder">
+                <i class="bi bi-qr-code"></i>
+            </div>
+            <h6 class="fw-bold mt-4 mb-2" id="paymentStatusText">Nhấn nút bên dưới để tạo mã thanh toán</h6>
+            <p class="text-muted small mb-3">Sau khi tạo, quét mã VietQR bằng app ngân hàng để thanh toán ngay</p>
+            
+            <!-- Nút tạo thanh toán -->
+            <button type="button" class="btn btn-danger fw-bold px-5 py-3" id="btnCreatePayment" style="border-radius: 12px; font-size: 16px;">
+                <i class="bi bi-qr-code me-2"></i> Tạo mã thanh toán
+            </button>
+
+            <!-- VietQR hiển thị sau khi tạo -->
+            <div id="qrDisplay" style="display: none;" class="mt-3">
+                <div class="d-inline-block p-3 bg-white rounded-3 shadow-sm">
+                    <img id="qrCodeImage" src="" alt="VietQR" style="width: 220px; height: 220px; border-radius: 8px;" />
+                </div>
+                <h5 class="fw-bold mt-4 mb-1" style="color: #0f172a;" id="qrAmountText"></h5>
+                <p class="text-muted small mb-3">Quét mã bằng app ngân hàng để chuyển khoản</p>
+
+                <div class="d-flex justify-content-center gap-3 mb-3">
+                    <a href="#" class="btn btn-outline-danger px-4 py-2" id="payOnlineBtn" target="_blank" style="border-radius: 8px; font-weight: 600; display: none;">
+                        <i class="bi bi-globe me-1"></i> Thanh toán online
+                    </a>
+                </div>
+
+                <!-- Trạng thái chờ thanh toán -->
+                <div id="paymentWaiting" style="display: none;">
+                    <div class="d-flex align-items-center justify-content-center gap-3 mt-2">
+                        <div class="spinner-border text-danger" role="status" style="width: 1.2rem; height: 1.2rem;"></div>
+                        <span class="fw-bold" style="font-size: 15px; color: #16a34a;">Đang chờ thanh toán...</span>
+                    </div>
+                    <p class="text-muted small mt-2">Đã quét mã? Vui lòng hoàn tất chuyển khoản trong app ngân hàng. Trang sẽ tự động cập nhật.</p>
+                    <a href="/Customer/Orders" class="btn btn-outline-danger mt-2" style="border-radius: 8px;">
+                        <i class="bi bi-arrow-right me-1"></i> Xem đơn hàng của tôi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
     const subtotal = @Html.Raw(Model.TotalAmount);
     const shippingFeeVal = 20000;
+    const orderId = @Model.Id;
 
     function selectDeliveryMethod(method) {
         document.getElementById('deliveryMethodInput').value = method;
@@ -241,34 +256,15 @@
             cardPickup.classList.remove('selected');
             cardDelivery.classList.add('selected');
             addressInput.required = true;
-            
-            // Cập nhật phí ship và tổng tiền
             shippingFeeText.innerText = formatCurrency(shippingFeeVal);
             totalAmountText.innerText = formatCurrency(subtotal + shippingFeeVal);
         } else {
             cardDelivery.classList.remove('selected');
             cardPickup.classList.add('selected');
             addressInput.required = false;
-            addressInput.value = ''; // clear address
-
-            // Reset phí ship và tổng tiền
+            addressInput.value = '';
             shippingFeeText.innerText = '0đ';
             totalAmountText.innerText = formatCurrency(subtotal);
-        }
-    }
-
-    function selectPaymentMethod(method) {
-        document.getElementById('paymentMethodInput').value = method;
-        
-        const cardCash = document.getElementById('card-cash');
-        const cardMomo = document.getElementById('card-momo');
-
-        if (method === 'MoMo') {
-            cardCash.classList.remove('selected');
-            cardMomo.classList.add('selected');
-        } else {
-            cardMomo.classList.remove('selected');
-            cardCash.classList.add('selected');
         }
     }
 
@@ -276,13 +272,121 @@
         return value.toLocaleString('vi-VN') + 'đ';
     }
 
-    // Ngăn chặn submit form nếu chưa nhập địa chỉ khi chọn giao hàng tận nơi
-    document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+    let paymentCheckInterval = null;
+
+    function startPaymentPolling() {
+        if (paymentCheckInterval) clearInterval(paymentCheckInterval);
+        paymentCheckInterval = setInterval(function() {
+            checkOrderPaymentStatus();
+        }, 5000);
+        setTimeout(function() {
+            if (paymentCheckInterval) clearInterval(paymentCheckInterval);
+        }, 30 * 60 * 1000);
+    }
+
+    function showPaymentQR(response) {
+        const btn = document.getElementById('btnCreatePayment');
+        btn.style.display = 'none';
+        document.getElementById('qrPlaceholder').style.display = 'none';
+        document.getElementById('paymentStatusText').textContent = 'Quét mã VietQR để thanh toán';
+        
+        const qrDisplay = document.getElementById('qrDisplay');
+        qrDisplay.style.display = 'block';
+
+        const qrCode = response.qrCode;
+        const checkoutUrl = response.checkoutUrl;
+        const qrImage = document.getElementById('qrCodeImage');
+        
+        if (qrCode) {
+            qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(qrCode);
+        } else {
+            qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(checkoutUrl);
+        }
+
+        // Dùng amount từ API (response.amount) nếu có, fallback về subtotal
+        const amount = response.amount || subtotal;
+        document.getElementById('qrAmountText').innerText = formatCurrency(amount);
+
+        const payOnlineBtn = document.getElementById('payOnlineBtn');
+        payOnlineBtn.href = checkoutUrl;
+        payOnlineBtn.style.display = 'inline-flex';
+
+        document.getElementById('paymentWaiting').style.display = 'block';
+    }
+
+    // Tự động kiểm tra khi vào trang: nếu đã có payment link từ trước, hiển thị luôn
+    $(document).ready(function() {
+        $.get('/api/PayOS/check-order-status?orderId=' + orderId, function(response) {
+            if (response.hasExistingPayment && response.checkoutUrl) {
+                showPaymentQR(response);
+                startPaymentPolling();
+            }
+        }).fail(function() {
+            // No existing payment, show the button as normal
+        });
+    });
+
+    document.getElementById('btnCreatePayment').addEventListener('click', function() {
+        const btn = this;
         const method = document.getElementById('deliveryMethodInput').value;
         const address = document.getElementById('shippingAddressInput').value.trim();
+        
         if (method === 'Delivery' && address === '') {
-            e.preventDefault();
             alert('Vui lòng nhập địa chỉ giao hàng của bạn.');
+            return;
         }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang tạo...';
+
+        // First, update the order with delivery info via the backend
+        const orderData = {
+            orderId: orderId,
+            deliveryMethod: method,
+            shippingAddress: method === 'Delivery' ? address : null,
+            paymentMethod: 'PayOS'
+        };
+
+        // Update order first, then create payment
+        $.post('/Customer/UpdateOrderInfo', orderData, function(response) {
+            if (!response.success) {
+                alert(response.message || 'Lỗi cập nhật đơn hàng.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-qr-code me-2"></i> Tạo mã thanh toán';
+                return;
+            }
+
+            // Now create PayOS payment and get VietQR
+            $.post('/api/PayOS/create-order-payment', { orderId: orderId }, function(paymentResponse) {
+                if (paymentResponse.success) {
+                    // Show QR code and start polling
+                    showPaymentQR(paymentResponse);
+                    startPaymentPolling();
+                } else {
+                    alert(paymentResponse.message || 'Lỗi tạo thanh toán.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-qr-code me-2"></i> Tạo mã thanh toán';
+                }
+            }).fail(function() {
+                alert('Lỗi kết nối đến PayOS. Vui lòng thử lại.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-qr-code me-2"></i> Tạo mã thanh toán';
+            });
+        }).fail(function() {
+            alert('Lỗi kết nối. Vui lòng thử lại.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-qr-code me-2"></i> Tạo mã thanh toán';
+        });
     });
+
+    function checkOrderPaymentStatus() {
+        $.get('/api/PayOS/check-order-status?orderId=' + orderId, function(response) {
+            if (response.status === 'Completed' || response.status === 'PAID') {
+                if (paymentCheckInterval) clearInterval(paymentCheckInterval);
+                window.location.href = '/Customer/PaymentSuccess?orderId=' + orderId;
+            }
+        }).fail(function() {
+            // Silently retry on next interval
+        });
+    }
 </script>

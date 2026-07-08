@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "zLylC1+QdX8=",
+  "dgSpecHash": "p5r4MBKAbtM=",
   "success": true,
   "projectFilePath": "D:\\Code\\job\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj",
   "expectedPackageFiles": [
@@ -47,6 +47,7 @@
     "C:\\Users\\Admin\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\npoi\\2.8.0\\npoi.2.8.0.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\payos.net5\\1.0.7\\payos.net5.1.0.7.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\pdfsharp\\6.2.4\\pdfsharp.6.2.4.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\sharpziplib\\1.4.2\\sharpziplib.1.4.2.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\skiasharp\\3.119.2\\skiasharp.3.119.2.nupkg.sha512",

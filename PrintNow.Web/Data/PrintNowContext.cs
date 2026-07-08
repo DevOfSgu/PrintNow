@@ -19,6 +19,9 @@ namespace PrintNow.Web.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<PlatformFee> PlatformFees { get; set; }
+        public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; }
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -64,6 +67,22 @@ namespace PrintNow.Web.Data
                 .WithMany()
                 .HasForeignKey(od => od.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // PlatformFee relationship
+            modelBuilder.Entity<PlatformFee>()
+                .HasOne(pf => pf.Shop)
+                .WithMany()
+                .HasForeignKey(pf => pf.ShopId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // WithdrawalRequest relationship
+            modelBuilder.Entity<WithdrawalRequest>()
+                .HasOne(wr => wr.Shop)
+                .WithMany()
+                .HasForeignKey(wr => wr.ShopId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // PaymentTransaction - no FK constraints needed as it can reference multiple entities
         }
     }
 }

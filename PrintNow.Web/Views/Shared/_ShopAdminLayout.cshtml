@@ -216,6 +216,18 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     Cài đặt
                 </a>
+                <a href="/ShopAdmin/BankAccount" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "BankAccount" ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Ngân hàng
+                </a>
+                <a href="/ShopAdmin/Withdrawals" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Withdrawals" ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                    Rút tiền
+                </a>
+                <a href="/ShopAdmin/PlatformFees" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "PlatformFees" ? "active" : "")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                    Phí sàn
+                </a>
             </nav>
             
             <!-- User Profile & Logout at Sidebar Bottom -->
@@ -241,6 +253,61 @@
             <header class="admin-topbar">
                 <div class="flex-grow-1"></div>
             </header>
+
+            <!-- Persistent Warning Banners -->
+            @if (ViewBag.PlatformFeeWarning != null)
+            {
+                <div class="px-4 pt-3" style="max-width: 1600px; margin: 0 auto; width: 100%;">
+                    <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-3 mb-0" style="border-radius: 12px;" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                        <div class="flex-grow-1">
+                            <strong class="d-block">⚠️ @ViewBag.PlatformFeeWarning</strong>
+                            <span class="small">Tiệm của bạn sẽ bị ẩn khỏi trang khách hàng cho đến khi hoàn tất thanh toán.</span>
+                        </div>
+                        @if (ViewBag.UnpaidFeeId != null)
+                        {
+                            <a href="/ShopAdmin/PlatformFees" class="btn btn-danger btn-sm fw-bold" style="border-radius: 8px; white-space: nowrap;">
+                                <i class="bi bi-credit-card me-1"></i> Thanh toán ngay
+                            </a>
+                        }
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            }
+
+            @if (ViewBag.BankInfoWarning != null)
+            {
+                <div class="px-4 pt-3" style="max-width: 1600px; margin: 0 auto; width: 100%;">
+                    <div class="alert alert-info alert-dismissible fade show d-flex align-items-center gap-3 mb-0" style="border-radius: 12px;" role="alert">
+                        <i class="bi bi-info-circle-fill fs-4"></i>
+                        <div class="flex-grow-1">
+                            <strong class="d-block">@ViewBag.BankInfoWarning</strong>
+                            <span class="small">Cập nhật thông tin ngân hàng để có thể nhận tiền rút từ hệ thống.</span>
+                        </div>
+                        <a href="/ShopAdmin/Settings" class="btn btn-outline-primary btn-sm fw-bold" style="border-radius: 8px; white-space: nowrap;">
+                            <i class="bi bi-gear me-1"></i> Cập nhật ngay
+                        </a>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            }
+
+            @if (ViewBag.LocationWarning != null)
+            {
+                <div class="px-4 pt-3" style="max-width: 1600px; margin: 0 auto; width: 100%;">
+                    <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-3 mb-0" style="border-radius: 12px;" role="alert">
+                        <i class="bi bi-geo-alt-fill fs-4"></i>
+                        <div class="flex-grow-1">
+                            <strong class="d-block">@ViewBag.LocationWarning</strong>
+                            <span class="small">Vui lòng cấu hình vị trí để khách hàng có thể tìm thấy tiệm của bạn.</span>
+                        </div>
+                        <a href="/ShopAdmin/Settings" class="btn btn-outline-danger btn-sm fw-bold" style="border-radius: 8px; white-space: nowrap;">
+                            <i class="bi bi-geo-alt me-1"></i> Cấu hình ngay
+                        </a>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            }
 
             <!-- Page Content -->
             <main class="admin-content">

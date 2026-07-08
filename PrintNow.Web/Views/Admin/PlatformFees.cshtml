@@ -1,0 +1,105 @@
+@model IEnumerable<PrintNow.Web.Models.PlatformFee>
+@{
+    ViewData["Title"] = "Admin - Phí sàn";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .badge-paid {
+        background-color: #dcfce7;
+        color: #166534;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    .badge-unpaid {
+        background-color: #fef3c7;
+        color: #92400e;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold m-0">Quản lý phí sàn</h3>
+        <p class="text-muted small m-0 mt-1">Phí sàn 199,000đ/tháng cho mỗi tiệm in</p>
+    </div>
+    <form asp-action="GenerateMonthlyFees" method="post" class="d-inline">
+        <button type="submit" class="btn btn-danger fw-bold" style="border-radius: 8px;">
+            <i class="bi bi-plus-circle me-1"></i> Tạo hóa đơn tháng này
+        </button>
+    </form>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="border-0 ps-4">Tiệm in</th>
+                        <th class="border-0">Tháng</th>
+                        <th class="border-0">Số tiền</th>
+                        <th class="border-0">Trạng thái</th>
+                        <th class="border-0">Ngày thanh toán</th>
+                        <th class="border-0 pe-4 text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fee in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-semibold">@fee.Shop?.ShopName</td>
+                            <td>@fee.Month/@fee.Year</td>
+                            <td class="fw-bold">@fee.Amount.ToString("N0")đ</td>
+                            <td>
+                                @if (fee.Status == "Paid")
+                                {
+                                    <span class="badge-paid">Đã thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-unpaid">Chưa thanh toán</span>
+                                }
+                            </td>
+                            <td class="text-muted" style="font-size: 13px;">
+                                @(fee.PaidAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")
+                            </td>
+                            <td class="pe-4 text-end">
+                                @if (fee.Status == "Unpaid")
+                                {
+                                    <form asp-action="MarkFeeAsPaid" method="post" class="d-inline" onsubmit="return confirm('Xác nhận đã nhận thanh toán phí sàn này?')">
+                                        <input type="hidden" name="feeId" value="@fee.Id" />
+                                        <button type="submit" class="btn btn-sm btn-success" style="border-radius: 8px;">
+                                            <i class="bi bi-check-lg me-1"></i> Đã nhận tiền
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                Chưa có hóa đơn phí sàn nào. Nhấn "Tạo hóa đơn tháng này" để bắt đầu.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

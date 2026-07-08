@@ -4,6 +4,17 @@
     Layout = "_ShopAdminLayout";
 }
 
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-3 mb-4" style="border-radius: 12px;" role="alert">
+        <i class="bi bi-info-circle-fill fs-4"></i>
+        <div class="flex-grow-1">
+            <strong class="d-block">@TempData["WarningMessage"]</strong>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <div class="row mb-4">
     <div class="col-12 col-md-4">
         <div class="card shadow-sm border-0" style="border-radius: 12px; height: 100%;">

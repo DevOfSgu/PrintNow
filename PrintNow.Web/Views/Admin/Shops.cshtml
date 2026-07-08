@@ -1,0 +1,77 @@
+@model IEnumerable<PrintNow.Web.Models.Shop>
+@{
+    ViewData["Title"] = "Admin - Quản lý tiệm in";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold m-0">Quản lý tiệm in</h3>
+        <p class="text-muted small m-0 mt-1">Danh sách tất cả các tiệm in trên hệ thống</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius: 16px; border: 1px solid #e2e8f0;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="border-0 ps-4">Tiệm in</th>
+                        <th class="border-0">Chủ tiệm</th>
+                        <th class="border-0">Số dư</th>
+                        <th class="border-0">Trạng thái</th>
+                        <th class="border-0">Ngày tạo</th>
+                        <th class="border-0 pe-4 text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var shop in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-semibold">@shop.ShopName</div>
+                                <div class="text-muted" style="font-size: 12px;">@shop.AddressText</div>
+                            </td>
+                            <td>
+                                <div>@shop.Owner?.FullName</div>
+                                <div class="text-muted" style="font-size: 12px;">@shop.Owner?.Email</div>
+                            </td>
+                            <td class="fw-bold">@shop.Balance.ToString("N0")đ</td>
+                            <td>
+                                @if (shop.IsLocked)
+                                {
+                                    <span class="badge bg-danger">Đã khóa</span>
+                                }
+                                else if (shop.IsActive)
+                                {
+                                    <span class="badge bg-success">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Tạm dừng</span>
+                                }
+                            </td>
+                            <td class="text-muted" style="font-size: 13px;">@shop.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td class="pe-4 text-end">
+                                <form asp-action="ToggleShopLock" method="post" class="d-inline" onsubmit="return confirm('@(shop.IsLocked ? "Mở khóa" : "Khóa") tiệm này?')">
+                                    <input type="hidden" name="shopId" value="@shop.Id" />
+                                    <input type="hidden" name="isLocked" value="@(!shop.IsLocked)" />
+                                    <button type="submit" class="btn btn-sm @(shop.IsLocked ? "btn-success" : "btn-danger")" style="border-radius: 8px;">
+                                        @(shop.IsLocked ? "Mở khóa" : "Khóa")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">Chưa có tiệm in nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

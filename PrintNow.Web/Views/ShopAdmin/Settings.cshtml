@@ -240,6 +240,30 @@
                             <textarea asp-for="Description" class="form-input-custom" rows="4" placeholder="Chuyên cung cấp dịch vụ in nhanh kỹ thuật số, in khổ lớn và thiết kế đồ họa chuyên nghiệp..."></textarea>
                         </div>
 
+                        <!-- Ngân hàng -->
+                        <div class="border-top pt-4 mt-4">
+                            <h6 class="fw-bold mb-3" style="font-size: 14px; color: #334155;">
+                                <i class="bi bi-bank text-danger me-2"></i>Thông tin tài khoản ngân hàng
+                            </h6>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-group-label">Chủ tài khoản</label>
+                                    <input asp-for="BankAccountName" class="form-input-custom" placeholder="NGUYEN VAN A" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-group-label">Số tài khoản</label>
+                                    <input asp-for="BankAccountNumber" class="form-input-custom" placeholder="1234567890" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-group-label">Ngân hàng</label>
+                                    <input asp-for="BankName" class="form-input-custom" placeholder="Vietcombank" />
+                                </div>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-info-circle me-1"></i> Thông tin này dùng để nhận tiền rút từ hệ thống.
+                            </div>
+                        </div>
+
                         <!-- Nút cập nhật thông tin -->
                         <div class="text-end">
                             <button type="submit" class="btn-submit-custom">

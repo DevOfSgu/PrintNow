@@ -889,7 +889,7 @@
       "Newtonsoft.Json/13.0.3": {
         "type": "package",
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
             "related": ".xml"
           }
         },
@@ -943,6 +943,22 @@
         },
         "build": {
           "build/NPOI.targets": {}
+        }
+      },
+      "payOS.Net5/1.0.7": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "compile": {
+          "lib/net5.0/payos-lib-dotnet-5.0.dll": {
+            "related": ".runtimeconfig.json"
+          }
+        },
+        "runtime": {
+          "lib/net5.0/payos-lib-dotnet-5.0.dll": {
+            "related": ".runtimeconfig.json"
+          }
         }
       },
       "PDFsharp/6.2.4": {
@@ -3416,6 +3432,20 @@
         "npoi.nuspec"
       ]
     },
+    "payOS.Net5/1.0.7": {
+      "sha512": "jhTF6swgXU2lmp5OPk9J+4hnWmsoCx+sW+mlYY8HQ1A+nLv+3qrKW56JAsDt/5tt73oqdfvcsqfzNYlHPKQmKQ==",
+      "type": "package",
+      "path": "payos.net5/1.0.7",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net5.0/payos-lib-dotnet-5.0.dll",
+        "lib/net5.0/payos-lib-dotnet-5.0.runtimeconfig.json",
+        "payos.net5.1.0.7.nupkg.sha512",
+        "payos.net5.nuspec"
+      ]
+    },
     "PDFsharp/6.2.4": {
       "sha512": "GhTr9F1uOYXHCIEOB5PXIgqn5a8WLsJL2m0eewTA0IvY1j6N4HGXHKKmEyB90/N6vrjmYamf41V9zbmdW2HY3g==",
       "type": "package",
@@ -4073,7 +4103,8 @@
       "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.9",
       "Microsoft.EntityFrameworkCore.Tools >= 10.0.9",
       "NPOI >= 2.8.0",
-      "PDFsharp >= 6.2.4"
+      "PDFsharp >= 6.2.4",
+      "payOS.Net5 >= 1.0.7"
     ]
   },
   "packageFolders": {
@@ -4146,6 +4177,10 @@
           "PDFsharp": {
             "target": "Package",
             "version": "[6.2.4, )"
+          },
+          "payOS.Net5": {
+            "target": "Package",
+            "version": "[1.0.7, )"
           }
         },
         "imports": [

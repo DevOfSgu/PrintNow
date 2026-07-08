@@ -31,6 +31,26 @@ build_property._RazorSourceGeneratorDebug =
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
+[D:/Code/job/PrintNow/PrintNow.Web/Views/Admin/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Code/job/PrintNow/PrintNow.Web/Views/Admin/PlatformFees.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cUGxhdGZvcm1GZWVzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Code/job/PrintNow/PrintNow.Web/Views/Admin/Shops.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cU2hvcHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Code/job/PrintNow/PrintNow.Web/Views/Admin/Withdrawals.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cV2l0aGRyYXdhbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Code/job/PrintNow/PrintNow.Web/Views/Admin/_AdminLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cX0FkbWluTGF5b3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Code/job/PrintNow/PrintNow.Web/Views/Auth/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxMb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -99,6 +119,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Code/job/PrintNow/PrintNow.Web/Views/ShopAdmin/BankAccount.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hvcEFkbWluXEJhbmtBY2NvdW50LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Code/job/PrintNow/PrintNow.Web/Views/ShopAdmin/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hvcEFkbWluXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -115,12 +139,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hvcEFkbWluXE9yZGVycy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Code/job/PrintNow/PrintNow.Web/Views/ShopAdmin/PlatformFees.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hvcEFkbWluXFBsYXRmb3JtRmVlcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Code/job/PrintNow/PrintNow.Web/Views/ShopAdmin/Services.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hvcEFkbWluXFNlcnZpY2VzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Code/job/PrintNow/PrintNow.Web/Views/ShopAdmin/Settings.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hvcEFkbWluXFNldHRpbmdzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Code/job/PrintNow/PrintNow.Web/Views/ShopAdmin/Withdrawals.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hvcEFkbWluXFdpdGhkcmF3YWxzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Code/job/PrintNow/PrintNow.Web/Views/_ViewImports.cshtml]

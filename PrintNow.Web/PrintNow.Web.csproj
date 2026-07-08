@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,7 @@
     </PackageReference>
     <PackageReference Include="NPOI" Version="2.8.0" />
     <PackageReference Include="PDFsharp" Version="6.2.4" />
+    <PackageReference Include="payOS.Net5" Version="1.0.7" />
   </ItemGroup>
 
 </Project>

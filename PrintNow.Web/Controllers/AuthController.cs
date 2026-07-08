@@ -146,6 +146,10 @@ namespace PrintNow.Web.Controllers
                 role = User.FindFirstValue(ClaimTypes.Role);
             }
 
+            if (role == "Admin")
+            {
+                return RedirectToAction("Index", "Admin");
+            }
             if (role == "ShopOwner")
             {
                 return RedirectToAction("Index", "ShopAdmin");
