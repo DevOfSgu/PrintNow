@@ -358,7 +358,7 @@ namespace PrintNow.Web.Controllers
                 var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
                 var order = await _context.Orders
                     .Include(o => o.OrderDetails)
-                    .FirstOrDefaultAsync(o => o.Id == request.OrderId && o.CustomerId == userId && o.Status == "Cart");
+                    .FirstOrDefaultAsync(o => o.Id == request.OrderId && o.CustomerId == userId && (o.Status == "Cart" || o.Status == "Pending"));
 
                 if (order == null)
                 {

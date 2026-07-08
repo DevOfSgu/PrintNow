@@ -3,12 +3,6 @@
     ViewData["Title"] = "Phí sàn";
     Layout = "_ShopAdminLayout";
     var isLocked = ViewBag.IsLocked as bool? ?? false;
-    var checkoutUrl = ViewBag.CheckoutUrl as string;
-    var qrCode = ViewBag.QrCode as string; // VietQR string from PayOS (EMVCo standard)
-    var unpaidFeeId = ViewBag.UnpaidFeeId as int?;
-    var unpaidFeeAmount = ViewBag.UnpaidFeeAmount as decimal?;
-    var unpaidFeeMonth = ViewBag.UnpaidFeeMonth as int?;
-    var unpaidFeeYear = ViewBag.UnpaidFeeYear as int?;
     var payOSNotConfigured = ViewBag.PayOSNotConfigured as bool? ?? false;
 }
 
@@ -48,56 +42,6 @@
         background-color: #b91c1c;
         color: white;
     }
-
-    /* QR Code styles */
-    .qr-container {
-        background: white;
-        border: 2px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 24px;
-        text-align: center;
-        max-width: 320px;
-        margin: 0 auto;
-    }
-    .qr-container img {
-        width: 200px;
-        height: 200px;
-        border-radius: 8px;
-    }
-    .qr-amount {
-        font-size: 24px;
-        font-weight: 800;
-        color: #dc2626;
-        margin: 12px 0 4px;
-    }
-    .qr-label {
-        font-size: 13px;
-        color: #64748b;
-        margin-bottom: 16px;
-    }
-    .qr-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 24px;
-        font-weight: 600;
-        font-size: 14px;
-        text-decoration: none;
-        transition: background-color 0.2s;
-    }
-    .qr-link:hover {
-        background-color: #b91c1c;
-        color: white;
-    }
-    .qr-countdown {
-        font-size: 12px;
-        color: #94a3b8;
-        margin-top: 8px;
-    }
 </style>
 
 <div class="mb-4">
@@ -131,46 +75,7 @@
     </div>
 }
 
-@if (!string.IsNullOrEmpty(checkoutUrl))
-{
-    <!-- Auto-generated QR Code for unpaid fee -->
-    <div class="mb-4">
-        <div class="qr-container shadow-sm">
-            <div class="mb-2">
-                <i class="bi bi-credit-card-2-front" style="font-size: 32px; color: var(--primary);"></i>
-            </div>
-            <div class="qr-amount">@unpaidFeeAmount?.ToString("N0")₫</div>
-            <div class="qr-label">Phí sàn tháng @unpaidFeeMonth/@unpaidFeeYear</div>
-
-            @if (!string.IsNullOrEmpty(qrCode))
-            {
-                <!-- VietQR từ PayOS - encode EMVCo string vào QR code, quét bằng app ngân hàng được ngay -->
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=@Uri.EscapeDataString(qrCode)"
-                     alt="VietQR thanh toán phí sàn"
-                     id="qrCodeImg"
-                     style="width: 200px; height: 200px; border-radius: 8px;" />
-            }
-            else
-            {
-                <!-- Fallback: QR từ checkoutUrl -->
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=@Uri.EscapeDataString(checkoutUrl)"
-                     alt="QR thanh toán phí sàn"
-                     id="qrCodeImgFallback"
-                     style="width: 200px; height: 200px; border-radius: 8px;" />
-            }
-
-            <div style="margin-top: 16px;">
-                <a href="@checkoutUrl" target="_blank" class="qr-link" id="payNowBtn">
-                    <i class="bi bi-credit-card"></i> Thanh toán online
-                </a>
-            </div>
-            <div class="qr-countdown">
-                <i class="bi bi-clock me-1"></i>Link thanh toán có hiệu lực trong 24h
-            </div>
-        </div>
-    </div>
-}
-else if (payOSNotConfigured && Model.Any(f => f.Status == "Unpaid"))
+@if (payOSNotConfigured && Model.Any(f => f.Status == "Unpaid"))
 {
     <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" style="border-radius: 12px;" role="alert">
         <i class="bi bi-exclamation-triangle-fill fs-4"></i>
@@ -206,15 +111,11 @@ else if (payOSNotConfigured && Model.Any(f => f.Status == "Unpaid"))
                 </div>
             </div>
             <div>
-                @if (fee.Status == "Unpaid" && string.IsNullOrEmpty(checkoutUrl))
+                @if (fee.Status == "Unpaid")
                 {
-                    <button type="button" class="btn-pay-fee" onclick="payFee(@fee.Id)">
-                        <i class="bi bi-qr-code me-1"></i> Thanh toán ngay
+                    <button type="button" class="btn-pay-fee" onclick="payFee(@fee.Id, this)">
+                        <i class="bi bi-credit-card me-1"></i> Thanh toán ngay
                     </button>
-                }
-                else if (fee.Status == "Unpaid" && fee.Id == unpaidFeeId && !string.IsNullOrEmpty(checkoutUrl))
-                {
-                    <span class="badge bg-info text-white">Đã tạo mã QR</span>
                 }
             </div>
         </div>
@@ -230,46 +131,23 @@ else if (payOSNotConfigured && Model.Any(f => f.Status == "Unpaid"))
 
 @section Scripts {
     <script>
-        // Auto-refresh payment status when page loads
-        $(document).ready(function() {
-            @if (!string.IsNullOrEmpty(checkoutUrl))
-            {
-                <text>
-                // Auto-check payment status every 5 seconds
-                var checkInterval = setInterval(function() {
-                    $.get('/api/PayOS/check-fee-status?feeId=@unpaidFeeId', function(response) {
-                        if (response.status === 'PAID' || response.status === 'Completed') {
-                            clearInterval(checkInterval);
-                            location.reload();
-                        }
-                    });
-                }, 5000);
-
-                // Stop checking after 30 minutes
-                setTimeout(function() {
-                    clearInterval(checkInterval);
-                }, 30 * 60 * 1000);
-                </text>
-            }
-        });
-
-        function payFee(feeId) {
-            var btn = event.target.closest('button');
+        function payFee(feeId, btn) {
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang tạo...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang chuyển...';
 
             $.post('/api/PayOS/create-fee-payment', { feeId: feeId }, function(response) {
-                if (response.success) {
+                if (response.success && response.checkoutUrl) {
+                    // Redirect directly to PayOS checkout page
                     window.location.href = response.checkoutUrl;
                 } else {
-                    alert(response.message);
+                    alert(response.message || 'Lỗi tạo thanh toán.');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-qr-code me-1"></i> Thanh toán ngay';
+                    btn.innerHTML = '<i class="bi bi-credit-card me-1"></i> Thanh toán ngay';
                 }
             }).fail(function() {
                 alert('Lỗi kết nối. Vui lòng thử lại.');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-qr-code me-1"></i> Thanh toán ngay';
+                btn.innerHTML = '<i class="bi bi-credit-card me-1"></i> Thanh toán ngay';
             });
         }
     </script>

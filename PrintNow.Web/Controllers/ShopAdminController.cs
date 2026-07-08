@@ -570,106 +570,6 @@ namespace PrintNow.Web.Controllers
             return Json(new { success = true, message = "Yêu cầu rút tiền đã được gửi! Admin sẽ xử lý trong thời gian sớm nhất." });
         }
 
-        /// <summary>
-        /// Tạo mới hoặc lấy link thanh toán PayOS cho phí sàn
-        /// Trả về (checkoutUrl, qrCode, statusChanged) 
-        /// - statusChanged = true nếu có thay đổi trạng thái (vừa thanh toán hoặc vừa tạo link mới)
-        /// - qrCode: VietQR code (base64) để hiển thị trực tiếp, quét được bằng app ngân hàng
-        /// </summary>
-        private async Task<(string? checkoutUrl, string? qrCode, bool statusChanged)> CreateOrGetPayOSPaymentLink(Net.payOS.PayOS payOS, PlatformFee fee, Shop shop)
-        {
-            // Kiểm tra nếu đã có PayOSOrderCode thì dùng lại
-            if (!string.IsNullOrEmpty(fee.PayOSOrderCode))
-            {
-                try
-                {
-                    var existingInfo = await payOS.getPaymentLinkInformation(long.Parse(fee.PayOSOrderCode));
-                    if (existingInfo.status == "PAID")
-                    {
-                        // Đã thanh toán nhưng chưa cập nhật - cập nhật ngay
-                        fee.Status = "Paid";
-                        fee.PaidAt = DateTime.UtcNow;
-                        shop.IsLocked = false;
-                        shop.IsActive = true;
-
-                        // Cập nhật trạng thái giao dịch
-                        var existingTransaction = await _context.PaymentTransactions
-                            .FirstOrDefaultAsync(t => t.PayOSOrderCode == fee.PayOSOrderCode);
-                        if (existingTransaction != null)
-                        {
-                            existingTransaction.Status = "Completed";
-                            existingTransaction.CompletedAt = DateTime.UtcNow;
-                        }
-
-                        await _context.SaveChangesAsync();
-                        return (null, null, true);
-                    }
-
-                    // Link cũ còn hiệu lực - lấy checkoutUrl và qrCode từ DB
-                    var existingTransactionForUrl = await _context.PaymentTransactions
-                        .FirstOrDefaultAsync(t => t.PayOSOrderCode == fee.PayOSOrderCode
-                            && t.TransactionType == "PlatformFee"
-                            && t.PlatformFeeId == fee.Id);
-
-                    if (existingTransactionForUrl != null && !string.IsNullOrEmpty(existingTransactionForUrl.PayOSResponse))
-                    {
-                        // PayOSResponse lưu dạng: checkoutUrl|qrCode (nếu có qrCode)
-                        var parts = existingTransactionForUrl.PayOSResponse.Split('|');
-                        var existingCheckoutUrl = parts[0];
-                        var existingQrCode = parts.Length > 1 ? parts[1] : null;
-                        return (existingCheckoutUrl, existingQrCode, false);
-                    }
-
-                    // Không tìm thấy URL đã lưu, tạo mới link
-                }
-                catch
-                {
-                    // Link cũ không còn hiệu lực, tiếp tục tạo mới
-                }
-            }
-
-            // Tạo link thanh toán mới với PayOS
-            var orderCode = long.Parse(DateTimeOffset.Now.ToString("ffffff"));
-            var domain = $"{Request.Scheme}://{Request.Host}";
-
-            var paymentData = new PaymentData(
-                orderCode: orderCode,
-                amount: (int)fee.Amount,
-                description: $"Phi san T{fee.Month}/{fee.Year}",
-                items: new List<ItemData>
-                {
-                    new ItemData($"Phí sàn tháng {fee.Month}/{fee.Year}", 1, (int)fee.Amount)
-                },
-                returnUrl: $"{domain}/ShopAdmin/FeePaymentSuccess?feeId={fee.Id}",
-                cancelUrl: $"{domain}/ShopAdmin/FeePaymentCancel?feeId={fee.Id}"
-            );
-
-            var response = await payOS.createPaymentLink(paymentData);
-
-            // PayOS trả về qrCode (VietQR - base64 image) có thể quét trực tiếp bằng app ngân hàng
-            string? qrCode = null;
-            try { qrCode = response.qrCode; } catch { /* fallback: không có qrCode */ }
-
-            // Lưu giao dịch (lưu cả checkoutUrl và qrCode vào PayOSResponse)
-            var transaction = new PaymentTransaction
-            {
-                TransactionType = "PlatformFee",
-                PlatformFeeId = fee.Id,
-                ShopId = shop.Id,
-                Amount = fee.Amount,
-                PayOSOrderCode = orderCode.ToString(),
-                PayOSPaymentLinkId = response.paymentLinkId,
-                PayOSResponse = $"{response.checkoutUrl}|{qrCode}", // Lưu cả hai, phân cách bằng |
-                Status = "Pending"
-            };
-            _context.PaymentTransactions.Add(transaction);
-
-            fee.PayOSOrderCode = orderCode.ToString();
-            await _context.SaveChangesAsync();
-
-            return (response.checkoutUrl, qrCode, true);
-        }
-
         // ===== PLATFORM FEES =====
 
         [HttpGet]
@@ -686,44 +586,20 @@ namespace PrintNow.Web.Controllers
 
             ViewBag.IsLocked = shop.IsLocked;
 
-            // Tự động tạo PayOS payment link cho phí sàn chưa thanh toán
+            // Kiểm tra nếu có phí sàn chưa thanh toán nhưng PayOS chưa cấu hình
             var unpaidFee = fees.FirstOrDefault(f => f.Status == "Unpaid");
             if (unpaidFee != null)
             {
                 try
                 {
                     var payOS = HttpContext.RequestServices.GetRequiredService<Net.payOS.PayOS>();
-                    if (payOS != null)
+                    if (payOS == null)
                     {
-                        var (checkoutUrl, qrCode, statusChanged) = await CreateOrGetPayOSPaymentLink(payOS, unpaidFee, shop);
-
-                        if (statusChanged)
-                        {
-                            // Reload fees to reflect updated status
-                            fees = await _context.PlatformFees
-                                .Where(f => f.ShopId == shop.Id)
-                                .OrderByDescending(f => f.Year)
-                                .ThenByDescending(f => f.Month)
-                                .ToListAsync();
-
-                            // Cập nhật ViewBag.IsLocked sau khi reload
-                            ViewBag.IsLocked = shop.IsLocked;
-                        }
-
-                        if (checkoutUrl != null)
-                        {
-                            ViewBag.CheckoutUrl = checkoutUrl;
-                            ViewBag.QrCode = qrCode ?? "";
-                            ViewBag.UnpaidFeeId = unpaidFee.Id;
-                            ViewBag.UnpaidFeeAmount = unpaidFee.Amount;
-                            ViewBag.UnpaidFeeMonth = unpaidFee.Month;
-                            ViewBag.UnpaidFeeYear = unpaidFee.Year;
-                        }
+                        ViewBag.PayOSNotConfigured = true;
                     }
                 }
                 catch
                 {
-                    // PayOS chưa được cấu hình hoặc có lỗi - không tự động tạo link
                     ViewBag.PayOSNotConfigured = true;
                 }
             }
