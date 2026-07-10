@@ -4,6 +4,20 @@
 USE [PrintNowDb];
 GO
 
+-- 0. CLEANUP existing mock data to prevent duplicates or broken characters
+DELETE FROM [Services] 
+WHERE [ShopId] IN (
+    SELECT [Id] FROM [Shops] 
+    WHERE [OwnerId] IN (SELECT [Id] FROM [Users] WHERE [Email] IN ('fastprint@gmail.com', 'bachkhoaprint@gmail.com', 'sinhvienprint@gmail.com'))
+);
+
+DELETE FROM [Shops] 
+WHERE [OwnerId] IN (SELECT [Id] FROM [Users] WHERE [Email] IN ('fastprint@gmail.com', 'bachkhoaprint@gmail.com', 'sinhvienprint@gmail.com'));
+
+DELETE FROM [Users] 
+WHERE [Email] IN ('fastprint@gmail.com', 'bachkhoaprint@gmail.com', 'sinhvienprint@gmail.com');
+GO
+
 -- 1. Insert Shop Owners into Users Table
 -- Passwords are kept in plain text as per AuthController setup
 INSERT INTO [Users] ([FullName], [Phone], [Email], [PasswordHash], [Role], [CreatedAt])
