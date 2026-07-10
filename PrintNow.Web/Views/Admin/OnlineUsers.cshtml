@@ -202,82 +202,50 @@
         <table class="table users-table mb-0">
             <thead>
                 <tr>
-                    <th>#</th>
                     <th>Người dùng</th>
-                    <th>Vai trò</th>
-                    <th>Trang hiện tại</th>
-                    <th>IP</th>
-                    <th>Thiết bị</th>
-                    <th>Thời gian kết nối</th>
+                    <th>Thời gian truy cập</th>
                 </tr>
             </thead>
             <tbody id="onlineUsersBody">
-                @if (!Model.Any())
+                @{
+                    var latestUser = Model.OrderByDescending(u => u.ConnectedAt).FirstOrDefault();
+                }
+                @if (latestUser == null)
                 {
                     <tr id="emptyRow">
-                        <td colspan="7">
+                        <td colspan="2">
                             <div class="empty-state">
                                 <i class="bi bi-people"></i>
                                 <h6 class="fw-bold">Chưa có người dùng nào đang truy cập</h6>
-                                <p class="small mb-0">Danh sách sẽ tự động cập nhật khi có người vào hệ thống.</p>
                             </div>
                         </td>
                     </tr>
                 }
                 else
                 {
-                    @foreach (var user in Model)
-                    {
-                        var initial = string.IsNullOrEmpty(user.FullName) ? "?" : user.FullName.Substring(0, 1).ToUpper();
-                        var isGuest = user.UserId == null;
-                        var roleClass = user.Role?.ToLower() switch {
-                            "admin" => "admin",
-                            "shopowner" => "shopowner",
-                            "customer" => "customer",
-                            _ => "guest"
-                        };
-                        var roleLabel = user.Role?.ToLower() switch {
-                            "admin" => "Admin",
-                            "shopowner" => "Chủ tiệm",
-                            "customer" => "Khách hàng",
-                            _ => "Khách"
-                        };
-                        <tr data-conn="@user.ConnectionId">
-                            <td class="text-muted fw-bold" style="font-size: 12px;">—</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="user-avatar @(isGuest ? "guest" : "")">@initial</div>
-                                    <div>
-                                        <div class="fw-bold" style="font-size: 13px;">@user.FullName</div>
-                                        <div class="text-muted" style="font-size: 11px;">@user.Email</div>
-                                    </div>
+                    var initial = string.IsNullOrEmpty(latestUser.FullName) ? "?" : latestUser.FullName.Substring(0, 1).ToUpper();
+                    var isGuest = latestUser.UserId == null;
+                    <tr data-conn="@latestUser.ConnectionId">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="user-avatar @(isGuest ? "guest" : "")">@initial</div>
+                                <div>
+                                    <div class="fw-bold" style="font-size: 13.5px;">@latestUser.FullName</div>
+                                    <div class="text-muted" style="font-size: 11px;">@latestUser.Email</div>
                                 </div>
-                            </td>
-                            <td><span class="role-badge @roleClass">@roleLabel</span></td>
-                            <td><div class="url-cell" title="@user.CurrentUrl">@user.CurrentUrl</div></td>
-                            <td><code style="font-size: 11px; color: #64748b;">@user.IpAddress</code></td>
-                            <td><div class="ua-cell" title="@user.UserAgent">@user.UserAgent</div></td>
-                            <td style="white-space: nowrap; font-size: 12px; color: #64748b;">@user.ConnectedAt.ToLocalTime().ToString("HH:mm:ss dd/MM")</td>
-                        </tr>
-                    }
+                            </div>
+                        </td>
+                        <td style="white-space: nowrap; font-size: 13.5px; color: #64748b;">@latestUser.ConnectedAt.ToLocalTime().ToString("HH:mm:ss dd/MM/yyyy")</td>
+                    </tr>
                 }
             </tbody>
         </table>
-    </div>
-
-    <div class="pagination-wrapper" id="paginationWrapper" style="display:none!important;">
-        <div class="pagination-info" id="paginationInfo"></div>
-        <nav>
-            <ul class="pagination pagination-sm mb-0 gap-1" id="paginationList"></ul>
-        </nav>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
-        const PAGE_SIZE = 10;
-        let currentPage = 1;
         // Map connectionId => row data object
         let usersMap = new Map();
 
@@ -285,139 +253,51 @@
         document.querySelectorAll('#onlineUsersBody tr[data-conn]').forEach(function(row) {
             usersMap.set(row.dataset.conn, {
                 connectionId: row.dataset.conn,
-                fullName: row.querySelector('.fw-bold[style]')?.innerText || '',
-                email: row.querySelector('.text-muted[style]')?.innerText || '',
-                role: row.querySelector('.role-badge')?.innerText || '',
-                roleClass: row.querySelector('.role-badge')?.className.replace('role-badge ','') || 'guest',
-                currentUrl: row.querySelector('.url-cell')?.getAttribute('title') || '',
-                ipAddress: row.querySelector('code')?.innerText || '',
-                userAgent: row.querySelector('.ua-cell')?.getAttribute('title') || '',
+                fullName: row.querySelector('.fw-bold')?.innerText || '',
+                email: row.querySelector('.text-muted')?.innerText || '',
                 connectedAt: row.querySelector('td:last-child')?.innerText || '',
                 userId: row.querySelector('.user-avatar')?.classList.contains('guest') ? null : 1,
+                timestamp: Date.now()
             });
         });
 
-        function getRoleLabelAndClass(role) {
-            if (!role) return { label: 'Khách', cls: 'guest' };
-            switch(role.toLowerCase()) {
-                case 'admin': return { label: 'Admin', cls: 'admin' };
-                case 'shopowner': return { label: 'Chủ tiệm', cls: 'shopowner' };
-                case 'customer': return { label: 'Khách hàng', cls: 'customer' };
-                default: return { label: 'Khách', cls: 'guest' };
-            }
-        }
-
-        function buildRow(u, idx) {
+        function buildRow(u) {
             const isGuest = !u.userId;
             const initial = u.fullName && u.fullName.length > 0 ? u.fullName[0].toUpperCase() : '?';
-            const { label, cls } = getRoleLabelAndClass(u.role);
             return `
                 <tr data-conn="${escapeAttr(u.connectionId)}">
-                    <td class="text-muted fw-bold" style="font-size:12px;">${idx}</td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <div class="user-avatar ${isGuest ? 'guest' : ''}">${initial}</div>
                             <div>
-                                <div class="fw-bold" style="font-size:13px;">${escapeHtml(u.fullName || 'Khách vãng lai')}</div>
+                                <div class="fw-bold" style="font-size:13.5px;">${escapeHtml(u.fullName || 'Khách vãng lai')}</div>
                                 <div class="text-muted" style="font-size:11px;">${escapeHtml(u.email || 'N/A')}</div>
                             </div>
                         </div>
                     </td>
-                    <td><span class="role-badge ${cls}">${label}</span></td>
-                    <td><div class="url-cell" title="${escapeAttr(u.currentUrl)}">${escapeHtml(u.currentUrl || '')}</div></td>
-                    <td><code style="font-size:11px;color:#64748b;">${escapeHtml(u.ipAddress || '')}</code></td>
-                    <td><div class="ua-cell" title="${escapeAttr(u.userAgent)}">${escapeHtml(u.userAgent || '')}</div></td>
-                    <td style="white-space:nowrap;font-size:12px;color:#64748b;">${escapeHtml(u.connectedAt || '')}</td>
+                    <td style="white-space:nowrap;font-size:13.5px;color:#64748b;">${escapeHtml(u.connectedAt || '')}</td>
                 </tr>`;
         }
 
         function renderTable() {
             const tbody = document.getElementById('onlineUsersBody');
             const allUsers = Array.from(usersMap.values());
-            const total = allUsers.length;
+            
+            // Sort by timestamp descending so the most recent is first
+            allUsers.sort((a, b) => b.timestamp - a.timestamp);
 
+            const total = allUsers.length;
             document.getElementById('totalOnlineCount').innerText = total;
             document.getElementById('lastUpdated').innerText = 'Cập nhật: ' + new Date().toLocaleTimeString('vi-VN');
 
             if (total === 0) {
-                tbody.innerHTML = `<tr id="emptyRow"><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i><h6 class="fw-bold">Chưa có người dùng nào đang truy cập</h6><p class="small mb-0">Danh sách sẽ tự động cập nhật khi có người vào hệ thống.</p></div></td></tr>`;
-                document.getElementById('paginationWrapper').style.cssText = 'display:none!important';
+                tbody.innerHTML = `<tr id="emptyRow"><td colspan="2"><div class="empty-state"><i class="bi bi-people"></i><h6 class="fw-bold">Chưa có người dùng nào đang truy cập</h6></div></td></tr>`;
                 return;
             }
 
-            const totalPages = Math.ceil(total / PAGE_SIZE);
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            const start = (currentPage - 1) * PAGE_SIZE;
-            const pageUsers = allUsers.slice(start, start + PAGE_SIZE);
-
-            let html = '';
-            pageUsers.forEach(function(u, i) {
-                html += buildRow(u, start + i + 1);
-            });
-            tbody.innerHTML = html;
-
-            renderPagination(total, totalPages);
-        }
-
-        function renderPagination(total, totalPages) {
-            const wrapper = document.getElementById('paginationWrapper');
-            const info = document.getElementById('paginationInfo');
-            const list = document.getElementById('paginationList');
-
-            if (total <= PAGE_SIZE) {
-                wrapper.style.cssText = 'display:none!important';
-                return;
-            }
-
-            wrapper.style.cssText = '';
-            const start = (currentPage - 1) * PAGE_SIZE + 1;
-            const end = Math.min(currentPage * PAGE_SIZE, total);
-            info.innerText = `Hiển thị ${start}–${end} trong ${total} người dùng`;
-
-            let pages = '';
-            // Prev
-            pages += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage - 1}"><i class="bi bi-chevron-left" style="font-size:11px;"></i></a>
-            </li>`;
-
-            // Page numbers
-            for (let p = 1; p <= totalPages; p++) {
-                const maxVisible = 5;
-                const half = Math.floor(maxVisible / 2);
-                let showPage = false;
-                if (totalPages <= maxVisible) showPage = true;
-                else if (p === 1 || p === totalPages) showPage = true;
-                else if (p >= currentPage - half && p <= currentPage + half) showPage = true;
-
-                if (showPage) {
-                    pages += `<li class="page-item ${p === currentPage ? 'active' : ''}">
-                        <a class="page-link" href="#" data-page="${p}">${p}</a>
-                    </li>`;
-                } else if (p === currentPage - half - 1 || p === currentPage + half + 1) {
-                    pages += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
-                }
-            }
-
-            // Next
-            pages += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage + 1}"><i class="bi bi-chevron-right" style="font-size:11px;"></i></a>
-            </li>`;
-
-            list.innerHTML = pages;
-
-            // Attach click events
-            list.querySelectorAll('a.page-link[data-page]').forEach(function(a) {
-                a.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const p = parseInt(this.dataset.page);
-                    const tp = Math.ceil(usersMap.size / PAGE_SIZE);
-                    if (p >= 1 && p <= tp) {
-                        currentPage = p;
-                        renderTable();
-                    }
-                });
-            });
+            // Only show the latest active user (1 item)
+            const u = allUsers[0];
+            tbody.innerHTML = buildRow(u);
         }
 
         function escapeHtml(text) {
@@ -429,9 +309,6 @@
             return text.replace(/"/g,'&quot;');
         }
 
-        // Initial render to set up pagination if initial data > 10
-        renderTable();
-
         // Connect to UserTrackingHub as Admin
         const adminConnection = new signalR.HubConnectionBuilder()
             .withUrl("/userTrackingHub?currentUrl=" + encodeURIComponent(window.location.href))
@@ -440,7 +317,6 @@
 
         adminConnection.on("UserConnected", function(info) {
             if (!info || !info.connectionId) return;
-            // Convert camelCase fields from JSON
             const u = {
                 connectionId: info.connectionId,
                 userId: info.userId,
@@ -450,7 +326,8 @@
                 ipAddress: info.ipAddress,
                 userAgent: info.userAgent,
                 currentUrl: info.currentUrl,
-                connectedAt: info.connectedAt ? new Date(info.connectedAt).toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'2-digit' }) : '',
+                connectedAt: info.connectedAt ? new Date(info.connectedAt).toLocaleTimeString('vi-VN') + ' ' + new Date(info.connectedAt).toLocaleDateString('vi-VN') : '',
+                timestamp: info.connectedAt ? new Date(info.connectedAt).getTime() : Date.now()
             };
             usersMap.set(u.connectionId, u);
             renderTable();
@@ -458,18 +335,8 @@
 
         adminConnection.on("UserDisconnected", function(connectionId) {
             if (!connectionId) return;
-            // Animate the row out if on current page
-            const row = document.querySelector(`#onlineUsersBody tr[data-conn="${connectionId}"]`);
-            if (row) {
-                row.classList.add('leaving-row');
-                setTimeout(function() {
-                    usersMap.delete(connectionId);
-                    renderTable();
-                }, 380);
-            } else {
-                usersMap.delete(connectionId);
-                renderTable();
-            }
+            usersMap.delete(connectionId);
+            renderTable();
         });
 
         adminConnection.start().then(function() {
