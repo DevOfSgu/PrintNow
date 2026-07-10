@@ -141,9 +141,70 @@
             background-color: #fee2e2;
             color: #b91c1c;
         }
+
+        /* Responsive Top Bar */
+        .admin-top-bar {
+            height: 56px;
+            display: none !important;
+            z-index: 100;
+        }
+        /* Sidebar overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .sidebar-overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Breakpoints */
+        @@media (max-width: 1200px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+            .admin-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 1000;
+                height: 100vh;
+            }
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+            .admin-top-bar {
+                display: flex !important;
+            }
+            .admin-main-content {
+                padding: 16px;
+            }
+        }
     </style>
 </head>
 <body>
+    <header class="admin-top-bar align-items-center justify-content-between px-3 py-2 bg-white shadow-sm border-bottom">
+        <button class="btn btn-outline-dark border-0 btn-hamburger" id="sidebarToggle">
+            <i class="bi bi-list fs-3"></i>
+        </button>
+        <a href="/Admin/Index" class="m-0">
+            <img src="~/logoapp.png" alt="PrintNow" style="height: 30px; object-fit: contain;" />
+        </a>
+        <div style="width: 40px;"></div>
+    </header>
     <div class="admin-layout">
         <aside class="admin-sidebar">
             <div class="admin-sidebar-header">
@@ -201,6 +262,26 @@
                 .build();
             trackingConnection.start().catch(err => console.warn("User tracking failed to start:", err));
         })();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.id = 'sidebarOverlay';
+            document.body.appendChild(overlay);
+
+            const sidebar = document.querySelector('.admin-sidebar');
+            const toggleBtn = document.querySelector('#sidebarToggle');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleSidebar);
+            }
+            overlay.addEventListener('click', toggleSidebar);
+        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
