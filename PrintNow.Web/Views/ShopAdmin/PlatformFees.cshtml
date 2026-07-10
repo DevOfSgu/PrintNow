@@ -135,19 +135,26 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang chuyển...';
 
-            $.post('/api/PayOS/create-fee-payment', { feeId: feeId }, function(response) {
-                if (response.success && response.checkoutUrl) {
-                    // Redirect directly to PayOS checkout page
-                    window.location.href = response.checkoutUrl;
-                } else {
-                    alert(response.message || 'Lỗi tạo thanh toán.');
+            $.ajax({
+                url: '/api/PayOS/create-fee-payment',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ feeId: feeId }),
+                success: function(response) {
+                    if (response.success && response.checkoutUrl) {
+                        // Redirect directly to PayOS checkout page
+                        window.location.href = response.checkoutUrl;
+                    } else {
+                        alert(response.message || 'Lỗi tạo thanh toán.');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-credit-card me-1"></i> Thanh toán ngay';
+                    }
+                },
+                error: function() {
+                    alert('Lỗi kết nối. Vui lòng thử lại.');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-credit-card me-1"></i> Thanh toán ngay';
                 }
-            }).fail(function() {
-                alert('Lỗi kết nối. Vui lòng thử lại.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-credit-card me-1"></i> Thanh toán ngay';
             });
         }
     </script>

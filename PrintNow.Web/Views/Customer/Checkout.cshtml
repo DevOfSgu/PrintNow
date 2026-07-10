@@ -269,21 +269,28 @@
             }
 
             // Create PayOS payment and redirect to checkout URL
-            $.post('/api/PayOS/create-order-payment', { orderId: orderId }, function(paymentResponse) {
-                if (paymentResponse.success && paymentResponse.checkoutUrl) {
-                    // Redirect directly to PayOS checkout page
-                    window.location.href = paymentResponse.checkoutUrl;
-                } else {
-                    alert(paymentResponse.message || 'Lỗi tạo thanh toán.');
+            $.ajax({
+                url: '/api/PayOS/create-order-payment',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ orderId: orderId }),
+                success: function(paymentResponse) {
+                    if (paymentResponse.success && paymentResponse.checkoutUrl) {
+                        // Redirect directly to PayOS checkout page
+                        window.location.href = paymentResponse.checkoutUrl;
+                    } else {
+                        alert(paymentResponse.message || 'Lỗi tạo thanh toán.');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-credit-card me-2"></i> Xác nhận & Thanh toán';
+                        document.getElementById('paymentLoading').style.display = 'none';
+                    }
+                },
+                error: function() {
+                    alert('Lỗi kết nối đến PayOS. Vui lòng thử lại.');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-credit-card me-2"></i> Xác nhận & Thanh toán';
                     document.getElementById('paymentLoading').style.display = 'none';
                 }
-            }).fail(function() {
-                alert('Lỗi kết nối đến PayOS. Vui lòng thử lại.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-credit-card me-2"></i> Xác nhận & Thanh toán';
-                document.getElementById('paymentLoading').style.display = 'none';
             });
         }).fail(function() {
             alert('Lỗi kết nối. Vui lòng thử lại.');

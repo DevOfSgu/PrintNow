@@ -164,6 +164,9 @@
                 <a href="/Admin/Withdrawals" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "Withdrawals" ? "active" : "")">
                     <i class="bi bi-bank"></i> Yêu cầu rút tiền
                 </a>
+                <a href="/Admin/OnlineUsers" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "OnlineUsers" ? "active" : "")">
+                    <i class="bi bi-people"></i> Người dùng online
+                </a>
             </nav>
             <div class="admin-sidebar-footer">
                 <div class="admin-profile-info">
@@ -189,6 +192,16 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        (function() {
+            const trackingConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/userTrackingHub?currentUrl=" + encodeURIComponent(window.location.href))
+                .withAutomaticReconnect()
+                .build();
+            trackingConnection.start().catch(err => console.warn("User tracking failed to start:", err));
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

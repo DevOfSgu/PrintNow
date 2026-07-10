@@ -1,32 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Code\\job\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj": {}
+    "C:\\Users\\ThinkPad\\Downloads\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj": {}
   },
   "projects": {
-    "D:\\Code\\job\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj": {
+    "C:\\Users\\ThinkPad\\Downloads\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Code\\job\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj",
+        "projectUniqueName": "C:\\Users\\ThinkPad\\Downloads\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj",
         "projectName": "PrintNow.Web",
-        "projectPath": "D:\\Code\\job\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\Code\\job\\PrintNow\\PrintNow.Web\\obj\\",
+        "projectPath": "C:\\Users\\ThinkPad\\Downloads\\PrintNow\\PrintNow.Web\\PrintNow.Web.csproj",
+        "packagesPath": "C:\\Users\\ThinkPad\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ThinkPad\\Downloads\\PrintNow\\PrintNow.Web\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\ThinkPad\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {

@@ -692,3 +692,26 @@ a {
     height: 300px !important;
   }
 }
+
+/* Fix duplicate container padding inside sidebar layouts */
+.customer-main .container,
+.admin-main .container {
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Laptop responsive overrides */
+@media (min-width: 992px) and (max-width: 1366px) {
+  .admin-sidebar,
+  .customer-sidebar {
+    width: 210px !important;
+  }
+  .admin-content,
+  .customer-content {
+    padding: 0 16px 24px 16px !important;
+  }
+  .admin-main-content {
+    padding: 16px !important;
+  }
+}

@@ -1,0 +1,481 @@
+@model List<PrintNow.Web.Services.OnlineUserInfo>
+@{
+    ViewData["Title"] = "Người dùng online";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .online-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .online-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #dcfce7;
+        color: #166534;
+        border-radius: 999px;
+        padding: 4px 14px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .online-badge .pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #16a34a;
+        animation: pulse 1.5s infinite;
+        flex-shrink: 0;
+    }
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .users-table-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+    .users-table-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .users-table th {
+        background: #f8fafc;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        border-top: none;
+        white-space: nowrap;
+    }
+    .users-table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-color: #f1f5f9;
+        font-size: 13.5px;
+    }
+    .users-table tbody tr {
+        transition: background-color 0.2s;
+    }
+    .users-table tbody tr:hover {
+        background-color: #fafafa;
+    }
+    .users-table tbody tr.new-row {
+        animation: rowFadeIn 0.5s ease-out;
+    }
+    .users-table tbody tr.leaving-row {
+        animation: rowFadeOut 0.4s ease-in forwards;
+    }
+    @@keyframes rowFadeIn {
+        from { background-color: #dcfce7; opacity: 0; }
+        to { background-color: transparent; opacity: 1; }
+    }
+    @@keyframes rowFadeOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(-20px); }
+    }
+    .user-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #D62839, #ef4444);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .user-avatar.guest {
+        background: linear-gradient(135deg, #94a3b8, #64748b);
+    }
+    .role-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 10px;
+        border-radius: 999px;
+    }
+    .role-badge.admin { background: #fee2e2; color: #dc2626; }
+    .role-badge.shopowner { background: #fef3c7; color: #d97706; }
+    .role-badge.customer { background: #dbeafe; color: #2563eb; }
+    .role-badge.guest { background: #f1f5f9; color: #64748b; }
+    .url-cell {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        color: #64748b;
+    }
+    .ua-cell {
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        color: #64748b;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 24px;
+        color: #94a3b8;
+    }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; }
+    .pagination-wrapper {
+        padding: 16px 24px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .pagination-info { font-size: 13px; color: #64748b; }
+    .page-link {
+        border-radius: 8px !important;
+        font-size: 13px;
+        padding: 6px 12px;
+        color: #374151;
+        border-color: #e2e8f0;
+    }
+    .page-item.active .page-link {
+        background-color: var(--primary) !important;
+        border-color: var(--primary) !important;
+        color: white !important;
+    }
+    .page-link:hover {
+        background-color: #f1f5f9;
+        border-color: #e2e8f0;
+        color: #374151;
+    }
+    .refresh-btn {
+        font-size: 12px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .total-counter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+</style>
+
+<div class="online-header">
+    <div>
+        <h3 class="fw-bold m-0">Người dùng đang truy cập</h3>
+        <p class="text-muted small m-0 mt-1">Theo dõi real-time tất cả phiên truy cập đang hoạt động trên hệ thống</p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <span class="online-badge">
+            <span class="pulse-dot"></span>
+            <span id="totalOnlineCount">@Model.Count</span> đang online
+        </span>
+    </div>
+</div>
+
+<div class="users-table-card">
+    <div class="users-table-header">
+        <i class="bi bi-wifi text-success fs-5"></i>
+        <span class="fw-bold" style="font-size: 15px;">Danh sách phiên truy cập</span>
+        <span class="ms-auto text-muted small" id="lastUpdated">Cập nhật mới nhất: vừa xong</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table users-table mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Người dùng</th>
+                    <th>Vai trò</th>
+                    <th>Trang hiện tại</th>
+                    <th>IP</th>
+                    <th>Thiết bị</th>
+                    <th>Thời gian kết nối</th>
+                </tr>
+            </thead>
+            <tbody id="onlineUsersBody">
+                @if (!Model.Any())
+                {
+                    <tr id="emptyRow">
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi bi-people"></i>
+                                <h6 class="fw-bold">Chưa có người dùng nào đang truy cập</h6>
+                                <p class="small mb-0">Danh sách sẽ tự động cập nhật khi có người vào hệ thống.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var user in Model)
+                    {
+                        var initial = string.IsNullOrEmpty(user.FullName) ? "?" : user.FullName.Substring(0, 1).ToUpper();
+                        var isGuest = user.UserId == null;
+                        var roleClass = user.Role?.ToLower() switch {
+                            "admin" => "admin",
+                            "shopowner" => "shopowner",
+                            "customer" => "customer",
+                            _ => "guest"
+                        };
+                        var roleLabel = user.Role?.ToLower() switch {
+                            "admin" => "Admin",
+                            "shopowner" => "Chủ tiệm",
+                            "customer" => "Khách hàng",
+                            _ => "Khách"
+                        };
+                        <tr data-conn="@user.ConnectionId">
+                            <td class="text-muted fw-bold" style="font-size: 12px;">—</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-avatar @(isGuest ? "guest" : "")">@initial</div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size: 13px;">@user.FullName</div>
+                                        <div class="text-muted" style="font-size: 11px;">@user.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="role-badge @roleClass">@roleLabel</span></td>
+                            <td><div class="url-cell" title="@user.CurrentUrl">@user.CurrentUrl</div></td>
+                            <td><code style="font-size: 11px; color: #64748b;">@user.IpAddress</code></td>
+                            <td><div class="ua-cell" title="@user.UserAgent">@user.UserAgent</div></td>
+                            <td style="white-space: nowrap; font-size: 12px; color: #64748b;">@user.ConnectedAt.ToLocalTime().ToString("HH:mm:ss dd/MM")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-wrapper" id="paginationWrapper" style="display:none!important;">
+        <div class="pagination-info" id="paginationInfo"></div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0 gap-1" id="paginationList"></ul>
+        </nav>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        const PAGE_SIZE = 10;
+        let currentPage = 1;
+        // Map connectionId => row data object
+        let usersMap = new Map();
+
+        // Seed initial data from server render
+        document.querySelectorAll('#onlineUsersBody tr[data-conn]').forEach(function(row) {
+            usersMap.set(row.dataset.conn, {
+                connectionId: row.dataset.conn,
+                fullName: row.querySelector('.fw-bold[style]')?.innerText || '',
+                email: row.querySelector('.text-muted[style]')?.innerText || '',
+                role: row.querySelector('.role-badge')?.innerText || '',
+                roleClass: row.querySelector('.role-badge')?.className.replace('role-badge ','') || 'guest',
+                currentUrl: row.querySelector('.url-cell')?.getAttribute('title') || '',
+                ipAddress: row.querySelector('code')?.innerText || '',
+                userAgent: row.querySelector('.ua-cell')?.getAttribute('title') || '',
+                connectedAt: row.querySelector('td:last-child')?.innerText || '',
+                userId: row.querySelector('.user-avatar')?.classList.contains('guest') ? null : 1,
+            });
+        });
+
+        function getRoleLabelAndClass(role) {
+            if (!role) return { label: 'Khách', cls: 'guest' };
+            switch(role.toLowerCase()) {
+                case 'admin': return { label: 'Admin', cls: 'admin' };
+                case 'shopowner': return { label: 'Chủ tiệm', cls: 'shopowner' };
+                case 'customer': return { label: 'Khách hàng', cls: 'customer' };
+                default: return { label: 'Khách', cls: 'guest' };
+            }
+        }
+
+        function buildRow(u, idx) {
+            const isGuest = !u.userId;
+            const initial = u.fullName && u.fullName.length > 0 ? u.fullName[0].toUpperCase() : '?';
+            const { label, cls } = getRoleLabelAndClass(u.role);
+            return `
+                <tr data-conn="${escapeAttr(u.connectionId)}">
+                    <td class="text-muted fw-bold" style="font-size:12px;">${idx}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="user-avatar ${isGuest ? 'guest' : ''}">${initial}</div>
+                            <div>
+                                <div class="fw-bold" style="font-size:13px;">${escapeHtml(u.fullName || 'Khách vãng lai')}</div>
+                                <div class="text-muted" style="font-size:11px;">${escapeHtml(u.email || 'N/A')}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="role-badge ${cls}">${label}</span></td>
+                    <td><div class="url-cell" title="${escapeAttr(u.currentUrl)}">${escapeHtml(u.currentUrl || '')}</div></td>
+                    <td><code style="font-size:11px;color:#64748b;">${escapeHtml(u.ipAddress || '')}</code></td>
+                    <td><div class="ua-cell" title="${escapeAttr(u.userAgent)}">${escapeHtml(u.userAgent || '')}</div></td>
+                    <td style="white-space:nowrap;font-size:12px;color:#64748b;">${escapeHtml(u.connectedAt || '')}</td>
+                </tr>`;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('onlineUsersBody');
+            const allUsers = Array.from(usersMap.values());
+            const total = allUsers.length;
+
+            document.getElementById('totalOnlineCount').innerText = total;
+            document.getElementById('lastUpdated').innerText = 'Cập nhật: ' + new Date().toLocaleTimeString('vi-VN');
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr id="emptyRow"><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i><h6 class="fw-bold">Chưa có người dùng nào đang truy cập</h6><p class="small mb-0">Danh sách sẽ tự động cập nhật khi có người vào hệ thống.</p></div></td></tr>`;
+                document.getElementById('paginationWrapper').style.cssText = 'display:none!important';
+                return;
+            }
+
+            const totalPages = Math.ceil(total / PAGE_SIZE);
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageUsers = allUsers.slice(start, start + PAGE_SIZE);
+
+            let html = '';
+            pageUsers.forEach(function(u, i) {
+                html += buildRow(u, start + i + 1);
+            });
+            tbody.innerHTML = html;
+
+            renderPagination(total, totalPages);
+        }
+
+        function renderPagination(total, totalPages) {
+            const wrapper = document.getElementById('paginationWrapper');
+            const info = document.getElementById('paginationInfo');
+            const list = document.getElementById('paginationList');
+
+            if (total <= PAGE_SIZE) {
+                wrapper.style.cssText = 'display:none!important';
+                return;
+            }
+
+            wrapper.style.cssText = '';
+            const start = (currentPage - 1) * PAGE_SIZE + 1;
+            const end = Math.min(currentPage * PAGE_SIZE, total);
+            info.innerText = `Hiển thị ${start}–${end} trong ${total} người dùng`;
+
+            let pages = '';
+            // Prev
+            pages += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage - 1}"><i class="bi bi-chevron-left" style="font-size:11px;"></i></a>
+            </li>`;
+
+            // Page numbers
+            for (let p = 1; p <= totalPages; p++) {
+                const maxVisible = 5;
+                const half = Math.floor(maxVisible / 2);
+                let showPage = false;
+                if (totalPages <= maxVisible) showPage = true;
+                else if (p === 1 || p === totalPages) showPage = true;
+                else if (p >= currentPage - half && p <= currentPage + half) showPage = true;
+
+                if (showPage) {
+                    pages += `<li class="page-item ${p === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${p}">${p}</a>
+                    </li>`;
+                } else if (p === currentPage - half - 1 || p === currentPage + half + 1) {
+                    pages += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
+                }
+            }
+
+            // Next
+            pages += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage + 1}"><i class="bi bi-chevron-right" style="font-size:11px;"></i></a>
+            </li>`;
+
+            list.innerHTML = pages;
+
+            // Attach click events
+            list.querySelectorAll('a.page-link[data-page]').forEach(function(a) {
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const p = parseInt(this.dataset.page);
+                    const tp = Math.ceil(usersMap.size / PAGE_SIZE);
+                    if (p >= 1 && p <= tp) {
+                        currentPage = p;
+                        renderTable();
+                    }
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function escapeAttr(text) {
+            if (!text) return '';
+            return text.replace(/"/g,'&quot;');
+        }
+
+        // Initial render to set up pagination if initial data > 10
+        renderTable();
+
+        // Connect to UserTrackingHub as Admin
+        const adminConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/userTrackingHub?currentUrl=" + encodeURIComponent(window.location.href))
+            .withAutomaticReconnect()
+            .build();
+
+        adminConnection.on("UserConnected", function(info) {
+            if (!info || !info.connectionId) return;
+            // Convert camelCase fields from JSON
+            const u = {
+                connectionId: info.connectionId,
+                userId: info.userId,
+                fullName: info.fullName,
+                email: info.email,
+                role: info.role,
+                ipAddress: info.ipAddress,
+                userAgent: info.userAgent,
+                currentUrl: info.currentUrl,
+                connectedAt: info.connectedAt ? new Date(info.connectedAt).toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'2-digit' }) : '',
+            };
+            usersMap.set(u.connectionId, u);
+            renderTable();
+        });
+
+        adminConnection.on("UserDisconnected", function(connectionId) {
+            if (!connectionId) return;
+            // Animate the row out if on current page
+            const row = document.querySelector(`#onlineUsersBody tr[data-conn="${connectionId}"]`);
+            if (row) {
+                row.classList.add('leaving-row');
+                setTimeout(function() {
+                    usersMap.delete(connectionId);
+                    renderTable();
+                }, 380);
+            } else {
+                usersMap.delete(connectionId);
+                renderTable();
+            }
+        });
+
+        adminConnection.start().then(function() {
+            return adminConnection.invoke("RegisterAdmin");
+        }).catch(function(err) {
+            console.error("Admin tracking connection error:", err);
+        });
+    </script>
+}

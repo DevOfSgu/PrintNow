@@ -13,11 +13,13 @@ namespace PrintNow.Web.Controllers
     {
         private readonly PrintNowContext _context;
         private readonly ActiveUserTracker _activeUserTracker;
+        private readonly OnlineUserTracker _onlineUserTracker;
 
-        public AdminController(PrintNowContext context, ActiveUserTracker activeUserTracker)
+        public AdminController(PrintNowContext context, ActiveUserTracker activeUserTracker, OnlineUserTracker onlineUserTracker)
         {
             _context = context;
             _activeUserTracker = activeUserTracker;
+            _onlineUserTracker = onlineUserTracker;
         }
 
         public async Task<IActionResult> Index()
@@ -304,6 +306,13 @@ namespace PrintNow.Web.Controllers
                 TempData["SuccessMessage"] = "Đã từ chối yêu cầu rút tiền!";
             }
             return RedirectToAction(nameof(Withdrawals));
+        }
+
+        [HttpGet]
+        public IActionResult OnlineUsers()
+        {
+            var onlineUsers = _onlineUserTracker.GetOnlineUsers();
+            return View(onlineUsers);
         }
     }
 }

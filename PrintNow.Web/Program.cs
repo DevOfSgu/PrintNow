@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ActiveUserTracker>();
+builder.Services.AddSingleton<OnlineUserTracker>();
 
 builder.Services.AddDbContext<PrintNowContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -108,5 +109,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapHub<PrintNow.Web.Hubs.ChatHub>("/chatHub");
+app.MapHub<PrintNow.Web.Hubs.UserTrackingHub>("/userTrackingHub");
 
 app.Run();
