@@ -2,6 +2,12 @@
 @{
     ViewData["Title"] = "Người dùng online";
     Layout = "_AdminLayout";
+
+    var uniqueLatestUsers = Model
+        .GroupBy(u => u.UserId != null ? "id_" + u.UserId : (!string.IsNullOrEmpty(u.Email) ? "em_" + u.Email : "conn_" + u.ConnectionId))
+        .Select(g => g.OrderByDescending(u => u.ConnectedAt).First())
+        .OrderByDescending(u => u.ConnectedAt)
+        .ToList();
 }
 
 <style>
@@ -186,7 +192,7 @@
     <div class="d-flex align-items-center gap-3">
         <span class="online-badge">
             <span class="pulse-dot"></span>
-            <span id="totalOnlineCount">@Model.Count</span> đang online
+            <span id="totalOnlineCount">@uniqueLatestUsers.Count</span> đang online
         </span>
     </div>
 </div>
@@ -207,13 +213,6 @@
                 </tr>
             </thead>
             <tbody id="onlineUsersBody">
-                @{
-                    var uniqueLatestUsers = Model
-                        .GroupBy(u => u.UserId != null ? "id_" + u.UserId : (!string.IsNullOrEmpty(u.Email) ? "em_" + u.Email : "conn_" + u.ConnectionId))
-                        .Select(g => g.OrderByDescending(u => u.ConnectedAt).First())
-                        .OrderByDescending(u => u.ConnectedAt)
-                        .ToList();
-                }
                 @if (!uniqueLatestUsers.Any())
                 {
                     <tr id="emptyRow">
@@ -327,6 +326,9 @@
             if (!text) return '';
             return text.replace(/"/g,'&quot;');
         }
+
+        // Initial render to synchronize online count and table
+        renderTable();
 
         // Connect to UserTrackingHub as Admin
         const adminConnection = new signalR.HubConnectionBuilder()
