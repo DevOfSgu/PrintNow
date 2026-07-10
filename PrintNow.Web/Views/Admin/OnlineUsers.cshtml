@@ -208,9 +208,13 @@
             </thead>
             <tbody id="onlineUsersBody">
                 @{
-                    var latestUser = Model.OrderByDescending(u => u.ConnectedAt).FirstOrDefault();
+                    var uniqueLatestUsers = Model
+                        .GroupBy(u => u.UserId != null ? "id_" + u.UserId : (!string.IsNullOrEmpty(u.Email) ? "em_" + u.Email : "conn_" + u.ConnectionId))
+                        .Select(g => g.OrderByDescending(u => u.ConnectedAt).First())
+                        .OrderByDescending(u => u.ConnectedAt)
+                        .ToList();
                 }
-                @if (latestUser == null)
+                @if (!uniqueLatestUsers.Any())
                 {
                     <tr id="emptyRow">
                         <td colspan="2">
@@ -223,20 +227,23 @@
                 }
                 else
                 {
-                    var initial = string.IsNullOrEmpty(latestUser.FullName) ? "?" : latestUser.FullName.Substring(0, 1).ToUpper();
-                    var isGuest = latestUser.UserId == null;
-                    <tr data-conn="@latestUser.ConnectionId">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="user-avatar @(isGuest ? "guest" : "")">@initial</div>
-                                <div>
-                                    <div class="fw-bold" style="font-size: 13.5px;">@latestUser.FullName</div>
-                                    <div class="text-muted" style="font-size: 11px;">@latestUser.Email</div>
+                    @foreach (var user in uniqueLatestUsers)
+                    {
+                        var initial = string.IsNullOrEmpty(user.FullName) ? "?" : user.FullName.Substring(0, 1).ToUpper();
+                        var isGuest = user.UserId == null;
+                        <tr data-conn="@user.ConnectionId" data-userid="@user.UserId" data-email="@user.Email">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-avatar @(isGuest ? "guest" : "")">@initial</div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size: 13.5px;">@user.FullName</div>
+                                        <div class="text-muted" style="font-size: 11px;">@user.Email</div>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td style="white-space: nowrap; font-size: 13.5px; color: #64748b;">@latestUser.ConnectedAt.ToLocalTime().ToString("HH:mm:ss dd/MM/yyyy")</td>
-                    </tr>
+                            </td>
+                            <td style="white-space: nowrap; font-size: 13.5px; color: #64748b;">@user.ConnectedAt.ToLocalTime().ToString("HH:mm:ss dd/MM/yyyy")</td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -256,7 +263,7 @@
                 fullName: row.querySelector('.fw-bold')?.innerText || '',
                 email: row.querySelector('.text-muted')?.innerText || '',
                 connectedAt: row.querySelector('td:last-child')?.innerText || '',
-                userId: row.querySelector('.user-avatar')?.classList.contains('guest') ? null : 1,
+                userId: row.dataset.userid || null,
                 timestamp: Date.now()
             });
         });
@@ -265,7 +272,7 @@
             const isGuest = !u.userId;
             const initial = u.fullName && u.fullName.length > 0 ? u.fullName[0].toUpperCase() : '?';
             return `
-                <tr data-conn="${escapeAttr(u.connectionId)}">
+                <tr data-conn="${escapeAttr(u.connectionId)}" data-userid="${escapeAttr(u.userId || '')}" data-email="${escapeAttr(u.email || '')}">
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <div class="user-avatar ${isGuest ? 'guest' : ''}">${initial}</div>
@@ -286,7 +293,17 @@
             // Sort by timestamp descending so the most recent is first
             allUsers.sort((a, b) => b.timestamp - a.timestamp);
 
-            const total = allUsers.length;
+            // Group by user identity to keep unique users
+            const uniqueUsers = new Map();
+            for (const u of allUsers) {
+                const key = u.userId ? 'id_' + u.userId : (u.email ? 'em_' + u.email : 'conn_' + u.connectionId);
+                if (!uniqueUsers.has(key)) {
+                    uniqueUsers.set(key, u);
+                }
+            }
+
+            const uniqueList = Array.from(uniqueUsers.values());
+            const total = uniqueList.length;
             document.getElementById('totalOnlineCount').innerText = total;
             document.getElementById('lastUpdated').innerText = 'Cập nhật: ' + new Date().toLocaleTimeString('vi-VN');
 
@@ -295,9 +312,11 @@
                 return;
             }
 
-            // Only show the latest active user (1 item)
-            const u = allUsers[0];
-            tbody.innerHTML = buildRow(u);
+            let html = '';
+            uniqueList.forEach(function(u) {
+                html += buildRow(u);
+            });
+            tbody.innerHTML = html;
         }
 
         function escapeHtml(text) {
